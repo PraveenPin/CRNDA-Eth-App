@@ -1,0 +1,6 @@
+Tasks
+------------
+1. Replicate Social Network react web app to react native app (TypeScript).
+2. Then push the contract on test net and also check whether we could get some fake ether for test nets.
+3. Wrap the app with a wallet connector that can connect both web wallets and mobile wallets via walletconnect.
+4. Sass usage and functionality.

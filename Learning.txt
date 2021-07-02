@@ -1,0 +1,7 @@
+Async Storage
+-----------------------
+For mobile apps, if you need to store some data on your app.
+We can use "Async Storage" for storing simple storage.
+"Async Storage" is a persistent key/value storage and for more complex data we can use blockchain itself.
+
+
