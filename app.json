@@ -1,10 +1,19 @@
 {
   "expo": {
+    "name": "Social-Network-Mobile-DApp",
+    "version": "1.0.0",
     "ios": {
       "bundleIdentifier": "com.myreactdapp"
     },
     "android": {
       "package": "com.myreactdapp"
+    },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/*"
+    ],
+    "web": {
+      "favicon": "./assets/image/app-icon.png"
     },
     "scheme": "myreactdapp",
     "icon": "assets/image/app-icon.png",

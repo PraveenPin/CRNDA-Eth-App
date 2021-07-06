@@ -6,7 +6,8 @@ module.exports = {
     development: {
       host: "192.168.0.8",
       port: 7545,
-      network_id: "*" // Match any network id
+      network_id: "*", // Match any network id
+      gasLimit: 10000000
     },
   },
   contracts_directory: './contracts/',

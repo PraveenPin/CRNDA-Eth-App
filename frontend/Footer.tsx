@@ -19,7 +19,10 @@ export default function Footer(props): JSX.Element {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => RootNavigation.navigate('Profile')}
+                    onPress={() => RootNavigation.navigate('Profile', {
+                        model: 'Footer',
+                        modelName: 'NoMessage'
+                    })}
                 >
                     <Text>Profile</Text>
                 </TouchableOpacity>

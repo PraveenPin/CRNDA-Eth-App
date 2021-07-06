@@ -4,4 +4,23 @@ For mobile apps, if you need to store some data on your app.
 We can use "Async Storage" for storing simple storage.
 "Async Storage" is a persistent key/value storage and for more complex data we can use blockchain itself.
 
+App Store Optimisation
+---------------------------
+1. App Icon - See Expo documentation on app icons.
+2. Splash Screen
+3. Valid Bundle Identifier for ios or android package
+4. Version number
+5. Privacy Policy
+6. Follow iOS guidelines, android permissions ( we can limit permissions in app.json file )
 
+Reason for rejections - iOS
+--------------------------
+1. Crashes and bugs -> Test thoroughly
+2. Requesting arbitrary permissions on android or iOS
+3. Broken Links
+4. Substandart Interface
+
+
+Release Channel
+--------------------
+Allow us to keep production app running, and so we can simultaneously test OTA the update without publishing.

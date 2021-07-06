@@ -18,7 +18,10 @@ import Footer from './Footer';
 import { navigationRef } from './RootNavigation';
 import NewsDetail from './NewsDetail';
 import About from './About';
-
+import ProfilePage from './Profile';
+import PostDetail from './PostDetail';
+import Catalog from './Catalog';
+import LoginPage from './LoginPage';
 
 const Stack: any = createStackNavigator();
 
@@ -27,6 +30,7 @@ function App(): JSX.Element {
   let [fontsLoaded] = useFonts({ 
     'OpenSans': require('../assets/fonts/OpenSans-Regular.ttf')
   });
+  const connector = useWalletConnect();
 
   if(!fontsLoaded){
     return (
@@ -39,12 +43,19 @@ function App(): JSX.Element {
         // style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}
         ref={navigationRef}
       >
-        <Stack.Navigator initialRouteName="Ethereum-Dapp-SocialNetwork" headerMode="screen">
+        <Stack.Navigator initialRouteName="LoginPage" headerMode="screen">
           <Stack.Screen 
-            name="Ethereum-Dapp-SocialNetwork" 
-            component={HomePage} 
+            name="LoginPage" 
             options={{
               header: () => <Header headerDisplay="Ethereum-Dapp-SocialNetwork"/>
+            }}>            
+              {props => <LoginPage {...props} connector={connector} />}
+          </Stack.Screen>
+          <Stack.Screen 
+            name="HomePage" 
+            component={HomePage} 
+            options={{
+              header: () => <Header headerDisplay="Welcome !!!"/>
             }}
           />
           <Stack.Screen 
@@ -59,6 +70,27 @@ function App(): JSX.Element {
             component={About} 
             options={{
               header: () => <Header headerDisplay="About"/>
+            }}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfilePage} 
+            options={{
+              header: () => <Header headerDisplay="Profile"/>
+            }}
+          />
+          <Stack.Screen 
+            name="PostDetail" 
+            component={PostDetail} 
+            options={{
+              header: () => <Header headerDisplay="PostDetail"/>
+            }}
+          />
+          <Stack.Screen 
+            name="Explore" 
+            component={Catalog} 
+            options={{
+              header: () => <Header headerDisplay="Explore"/>
             }}
           />
         </Stack.Navigator>

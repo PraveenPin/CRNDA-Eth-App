@@ -3,133 +3,71 @@ import { HARDHAT_PORT, HARDHAT_PRIVATE_KEY } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native-dapp';
 import React from 'react';
-import { useEffect } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Image, FlatList } from 'react-native';
+import { StyleSheet, Text, Platform, View, ActivityIndicator, Image, Button } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-import Web3 from 'web3';
-import SocialNetwork from '../abis/SocialNetwork.json';
+import TextAreaInput from './components/TextAreaInput';
+import Form from './components/Form';
+import validation from './utils/validation';
+import { FormData, PostFormData } from './DataTypes';
+import { useForm } from 'react-hook-form';
+import ipfs, { getBytes32FromIpfsHash } from './utils/ipfs';
+import * as ImagePicker from 'expo-image-picker';
+// import {useIpfs} from '../utils/ipfsC';
 
-const GANACHE_PORT:string = "7545";
-const GANACHE_IP_ADDRESS:string = "192.168.0.8";
+export default function HomePage({ route, navigation }): JSX.Element{
 
+  const [image, setImage] = React.useState(null);
+  const [fetchPosts, setFetchPosts] = React.useState(true);
+  const [allPosts, setAllPosts] = React.useState([]);
+  // const [imageBuffer, setImageBuffer] = React.useState(undefined);
+  const [isLoading, changeLoading] = React.useState<boolean>(true);
 
+  const { userAddress, contract } = route.params;
 
-const shouldDeployContract = async (web3, abi, data, from: string) => {
-    // const deployment = new web3.eth.Contract(abi).deploy({ from: data });
-    // const deployment = new web3.eth.Contract(abi, data);
-        
-    // const gas = await deployment.estimateGas();
-    // const {
-    //   options: { address: contractAddress },
-    // } = await deployment.send({ from, gas });
-    // return new web3.eth.Contract(abi, contractAddress);
-  
-    const networkId = await web3.eth.net.getId();
-    const networkData = SocialNetwork.networks[networkId];  
-    let socialNetwork = null;
-    if(networkData){
-      //bad to override transactionConfirmationBlocks' value, overridden here for test environment
-      socialNetwork = new web3.eth.Contract(SocialNetwork.abi, networkData.address, {transactionConfirmationBlocks: 1});    
+  const explorePosts = async () => {
+    const postCount = await contract.methods.postCount().call(); // this calls the method and returns the postCount
+    //call methods just read data from blockchain, costs no gas
+    //send methods writes data on blockchain, costs gas
+    console.log("Post Count",postCount);
+    let newPosts: Array<any> =  [];
+    for(var i = 1; i <= postCount; i++){
+      let post = await contract.methods.getPostFromPostId(i).call();
+      newPosts.push(post);
     }
-    return socialNetwork;
+    console.log("all",newPosts);
+    setAllPosts(newPosts);
+    setFetchPosts(false);
   };
 
-export default function HomePage({ navigation }): JSX.Element{
-
-  const [dataLoading, finishLoading] = React.useState(true);
-  const [newsData, setData] = React.useState([]);
-
-    // create new connector
-  const connector = useWalletConnect();
-  const [account, setAccount] = React.useState("");
-  const [user, setUser] = React.useState(0);
-  const [message, setMessage] = React.useState<string>('Loading...');
-  const [userInfo, setUserInfo] = React.useState({id: 0 ,name: "No User"});
-  const web3 = React.useMemo(
-    () => new Web3(new Web3.providers.HttpProvider(`http://${GANACHE_IP_ADDRESS}:${GANACHE_PORT}`)),
-    [HARDHAT_PORT]
-  );
-
-  React.useEffect(() => {
+  React.useEffect(() => {    
     (async () => {
-      // const { address } = await web3.eth.accounts.privateKeyToAccount(HARDHAT_PRIVATE_KEY);
-      const accounts = await web3.eth.getAccounts();
-      console.log("addres",accounts);
-      const contract = await shouldDeployContract(
-        web3,
-        SocialNetwork.abi,
-        SocialNetwork.bytecode,
-        "0x6f0a752416d88452e919fddc777564a3a931548c"
-      );
-
-      setMessage(await contract.methods.networkName().call());
-      setAccount(accounts[0]);
-
-      const user = await contract.methods.getUserIdFromAddress(accounts[0]).call();
-      if(!user){
-        setUser(web3.utils.hexToNumber(user));
-      }
-      else{
-
-        let gasReq = await contract.methods.autoCreateUser("Praveen Pinjala - Deployer").estimateGas({ from : accounts[0] });
-        const resp = await contract.methods.autoCreateUser("Praveen Pinjala - Deployer").send({from: accounts[0], gas:gasReq});      
-        const userInfo = await contract.methods.getUserInfo().call({from : accounts[0]});
-        let userObj = {
-          id: userInfo[0],
-          name: userInfo[1],
-          followersCount: userInfo[2],
-          followingCount: userInfo[3],
-          tipObtained: userInfo[4],
-          tipDonated: userInfo[5]
-        };
-  
-        setUserInfo(userObj);             
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to make this work!');
+        }
       }
     })();
-
-    
-    fetch('https://newsapi.org/v2/everything?q=tech&apiKey=10b25f941dd343278d9ae7cef2f45cd5')
-    .then((response) =>  response.json())
-    .then((json) => setData(json.articles))
-    .catch(error => console.log(error))
-    .finally(() =>  finishLoading(false));
-
-
-  }, [web3, shouldDeployContract, setMessage, HARDHAT_PRIVATE_KEY, setAccount, setUser, setUserInfo, setData, finishLoading]);
-
-  const connectWallet = React.useCallback(() => {
-    return connector.connect();
-  }, [connector]);
-
-  const signTransaction = React.useCallback(async () => {
-    try {
-       const accounts = await web3.eth.getAccounts(); 
-       const resp = await connector.signTransaction({
-        data: '0x',
-        from: accounts[0],
-        gas: '0x9c40',
-        gasPrice: '0x02540be400',
-        nonce: '0x0114',
-        to: accounts[1],
-        value: '0x01',
-      });
-
-      console.log("Sign trans", resp);
-    } catch (e) {
-      console.error(e);
+    if(fetchPosts){      
+      explorePosts();
     }
-  }, [connector, web3]);
+  },[fetchPosts]);
 
-
-  const killSession = React.useCallback(() => {
-    return connector.killSession();
-  }, [connector]);
-
+  const createAPost = React.useCallback( async (content : string, url : string, imageHash : string ) => {
+      const TRANSFER_GAS_ESTIMATION = await contract.methods.createPost(content, url, imageHash).estimateGas({ from : userAddress });
+      // const gasPrice = await web3.eth.getGasPrice();
+      console.log("Gas for creating this post",TRANSFER_GAS_ESTIMATION, content, url, imageHash);
+      await contract.methods.createPost(content, url, imageHash).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
+      .once('receipt', (receipt) => {
+          console.log("receipt",receipt);
+          setFetchPosts(true);
+      });
+  },[]);
 
   const storyItem = ({ item }) => {
     return (
         <TouchableWithoutFeedback
-            onPress={ () => { navigation.navigate('NewsDetail', { url: item.url })}}
+            onPress={ () => { navigation.goBack()}}
         >
             <View style={styles.listings}>
                 <Text style={styles.title}>{item.title}</Text>
@@ -138,35 +76,68 @@ export default function HomePage({ navigation }): JSX.Element{
             </View>
         </TouchableWithoutFeedback>
     );
+
   };
 
 
-  return (
-    <View style={[StyleSheet.absoluteFill, styles.center, styles.white]}>
-      <Text testID="tid-message">{`${message} - ${userInfo.name}`}</Text>
-      {!connector.connected && (
-        <TouchableOpacity onPress={connectWallet}>
-          <Text>Connect a Wallet</Text>
-        </TouchableOpacity>
-      )}
-      {!!connector.connected ? (
-        <>
-          <TouchableOpacity onPress={signTransaction}>
-            <Text>Sign a Transaction</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={killSession}>
-            <Text>Kill Session</Text>
-          </TouchableOpacity>
-        </>
-      ): <ActivityIndicator/>}
 
-			{dataLoading ? <ActivityIndicator/> : (
-				<FlatList
-					data={newsData}
-					renderItem={storyItem}
-					keyExtractor={(item) => item.url}
-				/>
-			)}
+//   <FlatList
+//    data={newsData}
+//     renderItem={storyItem}
+//     keyExtractor={(item) => item.url}
+  // />
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.cancelled) {
+      // console.log("asd",Buffer.from(result.uri, 'base64'));
+      setImage(result.uri);
+    }
+  }
+
+  const { handleSubmit, register, setValue, errors, reset } = useForm<PostFormData>();
+  
+  const onSubmit = async (data: PostFormData) => {
+    console.log('data', JSON.stringify(data));
+    if(!!image){
+      console.log("uploading image....", image);
+      ipfs.add(image)
+      .then(result => {
+        console.log("Upload successfull. Sending a request to create a post",result);
+        createAPost(data.postContent,data.postUrl, getBytes32FromIpfsHash(result));
+      })
+      .catch(error => console.error(error));
+    }
+    else{
+      console.log("Sending a request to create a post with no image");
+      createAPost(data.postContent,data.postUrl,"0x0000000000000000000000000000000000000000000000000000000000000000");
+    }
+  };
+
+  console.log("IN rednerr",allPosts);
+
+  return (
+    <View style={[StyleSheet.absoluteFill, styles.center, styles.white]}>    
+			<Text style={styles.formHeader}>Create a post</Text>
+        <Form {...{ register, setValue, validation, errors }}>
+          <TextAreaInput name="postContent" label="Content " placeholder="What's on your mind?"/>
+          <TextAreaInput name="postUrl" label="Url " placeholder="Attach a url"/>
+          <Button ref={register} title="Pick an image from camera roll" onPress={pickImage} />
+          <Button title="Submit" onPress={handleSubmit(onSubmit)} />
+          <Button title="Clear" onPress={() => reset()} />
+        </Form>
+          <Text>
+            Preview:
+          </Text>
+          {image && <Image ref={register} source={{ uri: image }} style={{ width: 200, height: 200 }} />}
     </View>
   );
 }
@@ -198,5 +169,13 @@ const styles = StyleSheet.create({
 		blurb:{
 			fontFamily: 'OpenSans',
 			fontStyle: 'italic'
-		}
+		},
+    formHeader: {
+      fontWeight: 'bold',
+      fontSize: 20,
+      color: 'black'
+    },
+    productImage: {
+      
+    }
 });
