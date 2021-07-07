@@ -12,32 +12,10 @@ import { FormData, PostFormData } from './DataTypes';
 import { useForm } from 'react-hook-form';
 import ipfs, { getBytes32FromIpfsHash } from './utils/ipfs';
 import * as ImagePicker from 'expo-image-picker';
-// import {useIpfs} from '../utils/ipfsC';
 
-export default function HomePage({ route, navigation }): JSX.Element{
+export default function HomePage({ route, navigation, userAddress, contract }): JSX.Element{
 
   const [image, setImage] = React.useState(null);
-  const [fetchPosts, setFetchPosts] = React.useState(true);
-  const [allPosts, setAllPosts] = React.useState([]);
-  // const [imageBuffer, setImageBuffer] = React.useState(undefined);
-  const [isLoading, changeLoading] = React.useState<boolean>(true);
-
-  const { userAddress, contract } = route.params;
-
-  const explorePosts = async () => {
-    const postCount = await contract.methods.postCount().call(); // this calls the method and returns the postCount
-    //call methods just read data from blockchain, costs no gas
-    //send methods writes data on blockchain, costs gas
-    console.log("Post Count",postCount);
-    let newPosts: Array<any> =  [];
-    for(var i = 1; i <= postCount; i++){
-      let post = await contract.methods.getPostFromPostId(i).call();
-      newPosts.push(post);
-    }
-    console.log("all",newPosts);
-    setAllPosts(newPosts);
-    setFetchPosts(false);
-  };
 
   React.useEffect(() => {    
     (async () => {
@@ -48,10 +26,8 @@ export default function HomePage({ route, navigation }): JSX.Element{
         }
       }
     })();
-    if(fetchPosts){      
-      explorePosts();
-    }
-  },[fetchPosts]);
+  
+  });
 
   const createAPost = React.useCallback( async (content : string, url : string, imageHash : string ) => {
       const TRANSFER_GAS_ESTIMATION = await contract.methods.createPost(content, url, imageHash).estimateGas({ from : userAddress });
@@ -60,32 +36,8 @@ export default function HomePage({ route, navigation }): JSX.Element{
       await contract.methods.createPost(content, url, imageHash).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
       .once('receipt', (receipt) => {
           console.log("receipt",receipt);
-          setFetchPosts(true);
       });
   },[]);
-
-  const storyItem = ({ item }) => {
-    return (
-        <TouchableWithoutFeedback
-            onPress={ () => { navigation.goBack()}}
-        >
-            <View style={styles.listings}>
-                <Text style={styles.title}>{item.title}</Text>
-                <Image style={styles.thumbNail} source={{ uri: item.urlToImage }}/>
-                <Text style={styles.blurb}>{item.description}</Text>
-            </View>
-        </TouchableWithoutFeedback>
-    );
-
-  };
-
-
-
-//   <FlatList
-//    data={newsData}
-//     renderItem={storyItem}
-//     keyExtractor={(item) => item.url}
-  // />
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -93,12 +45,13 @@ export default function HomePage({ route, navigation }): JSX.Element{
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
+      base64: true,
+      exif: true
     });
 
     console.log(result);
 
     if (!result.cancelled) {
-      // console.log("asd",Buffer.from(result.uri, 'base64'));
       setImage(result.uri);
     }
   }
@@ -122,11 +75,9 @@ export default function HomePage({ route, navigation }): JSX.Element{
     }
   };
 
-  console.log("IN rednerr",allPosts);
-
   return (
-    <View style={[StyleSheet.absoluteFill, styles.center, styles.white]}>    
-			<Text style={styles.formHeader}>Create a post</Text>
+    <View style={[StyleSheet.absoluteFill, styles.white]}>    
+			  <Text style={styles.formHeader}>Create a post</Text>
         <Form {...{ register, setValue, validation, errors }}>
           <TextAreaInput name="postContent" label="Content " placeholder="What's on your mind?"/>
           <TextAreaInput name="postUrl" label="Url " placeholder="Attach a url"/>
@@ -137,7 +88,8 @@ export default function HomePage({ route, navigation }): JSX.Element{
           <Text>
             Preview:
           </Text>
-          {image && <Image ref={register} source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+          {/* {image && <Image ref={register} source={URL.createObjectURL(image)} style={{ width: 200, height: 200 }} />} */}
+          {image && <Image ref={register} source={{uri: image}} style={{ width: 200, height: 200 }} />}
     </View>
   );
 }
@@ -148,7 +100,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f4f4f4',
         alignItems:'center'
     },
-    center: { alignItems: 'center', justifyContent: 'center' },
+    // center: { alignItems: 'center', justifyContent: 'center' },
     // eslint-disable-next-line react-native/no-color-literals
     white: { backgroundColor: 'white' },
 		thumbNail: {

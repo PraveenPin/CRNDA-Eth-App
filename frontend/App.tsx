@@ -1,9 +1,8 @@
 import { HARDHAT_PORT, HARDHAT_PRIVATE_KEY } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native-dapp';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import localhost from 'react-native-localhost';
 import Web3 from 'web3';
 import { useFonts } from 'expo-font';
 import AppLoading from 'expo-app-loading';
@@ -20,8 +19,12 @@ import NewsDetail from './NewsDetail';
 import About from './About';
 import ProfilePage from './Profile';
 import PostDetail from './PostDetail';
-import Catalog from './Catalog';
+import ExplorePage from './ExplorePage';
 import LoginPage from './LoginPage';
+import SocialNetwork from '../abis/SocialNetwork.json';
+
+const GANACHE_PORT:string = "7545";
+const GANACHE_IP_ADDRESS:string = "192.168.0.8";
 
 const Stack: any = createStackNavigator();
 
@@ -32,7 +35,40 @@ function App(): JSX.Element {
   });
   const connector = useWalletConnect();
 
-  if(!fontsLoaded){
+  const [userAddress, setUserAddress] = useState(null);
+  const [contract, setContract] = useState(undefined);
+  const [web3, setWeb3] = useState(null);
+  const [initialSetup, setInitialSetup] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+    if(!!contract){
+      setInitialSetup(false);
+    }
+    else{
+      const web3 = new Web3(new Web3.providers.HttpProvider(`http://${GANACHE_IP_ADDRESS}:${GANACHE_PORT}`));        
+      setWeb3(web3);
+      
+      const accounts = await web3.eth.getAccounts();
+      setUserAddress(accounts[1]);
+      console.log("addres",accounts);
+      
+      const networkId = await web3.eth.net.getId();
+      const networkData = SocialNetwork.networks[networkId];  
+      if(networkData){
+        //bad to override transactionConfirmationBlocks' value, overridden here for test environment
+        const socialNetwork = new web3.eth.Contract(SocialNetwork.abi, networkData.address, {transactionConfirmationBlocks: 1});
+        setContract(socialNetwork);
+      }
+      else{
+        window.alert("Social Network contract not deployed to detected network");
+      }
+    }
+      
+    })();
+  },[contract]);
+
+  if(!fontsLoaded && !!initialSetup){
     return (
       <AppLoading/>
     ); 
@@ -47,52 +83,70 @@ function App(): JSX.Element {
           <Stack.Screen 
             name="LoginPage" 
             options={{
-              header: () => <Header headerDisplay="Ethereum-Dapp-SocialNetwork"/>
-            }}>            
-              {props => <LoginPage {...props} connector={connector} />}
+              header: (props) => <Header {...props} headerDisplay="Ethereum-Dapp-SocialNetwork"/>
+            }}>
+              {props => <LoginPage 
+                          {...props}
+                          connector={connector}
+                          userAddress={userAddress}
+                          contract={contract}
+                          web3={web3}
+                        />}
           </Stack.Screen>
           <Stack.Screen 
-            name="HomePage" 
-            component={HomePage} 
+            name="HomePage"
             options={{
-              header: () => <Header headerDisplay="Welcome !!!"/>
+              header: (props) => <Header {...props} headerDisplay="Welcome !!!"/>
             }}
-          />
+          >
+            {props => <HomePage 
+                      {...props}
+                      userAddress={userAddress}
+                      contract={contract}
+                    />}
+
+          </Stack.Screen>
           <Stack.Screen 
             name="NewsDetail" 
             component={NewsDetail} 
             options={{
-              header: () => <Header headerDisplay="News"/>
+              header: (props) => <Header {...props} headerDisplay="News"/>
             }}
           />
           <Stack.Screen 
             name="About" 
             component={About} 
             options={{
-              header: () => <Header headerDisplay="About"/>
+              header: (props) => <Header {...props} headerDisplay="About"/>
             }}
           />
           <Stack.Screen 
             name="Profile" 
             component={ProfilePage} 
             options={{
-              header: () => <Header headerDisplay="Profile"/>
+              header: (props) => <Header {...props} headerDisplay="Profile"/>
             }}
           />
           <Stack.Screen 
             name="PostDetail" 
             component={PostDetail} 
             options={{
-              header: () => <Header headerDisplay="PostDetail"/>
+              header: (props) => <Header {...props} headerDisplay="PostDetail"/>
             }}
           />
           <Stack.Screen 
-            name="Explore" 
-            component={Catalog} 
+            name="Explore"
             options={{
-              header: () => <Header headerDisplay="Explore"/>
+              header: (props) => <Header {...props} headerDisplay="Explore"/>
             }}
-          />
+          >
+            {props => <ExplorePage 
+                      {...props}
+                      userAddress={userAddress}
+                      contract={contract}
+                      web3={web3}
+                    />}
+          </Stack.Screen>
         </Stack.Navigator>
         <Footer/>
       </NavigationContainer>

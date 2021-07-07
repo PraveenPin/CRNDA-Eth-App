@@ -17,57 +17,38 @@ export default class LoginPage extends React.Component<any, any>{
         super(props);
         this.state={
             userExists: false,
-            userAddress: null,
             user: {},
             userDetails: {},
-            contract: null,
-            web3: null,
             userName: '',
             creatingUser: false
 
         }
     }
 
-    async componentDidMount(){
-        //initial setup for smart contract     
-        const web3 = new Web3(new Web3.providers.HttpProvider(`http://${GANACHE_IP_ADDRESS}:${GANACHE_PORT}`));        
-        const accounts = await web3.eth.getAccounts();
-        this.setState({ web3: web3, userAddress: accounts[1] });
-        console.log("addres",accounts);
-        await this.shouldDeployContract(this.state.web3);
+    componentDidMount(){
+        console.log("THis.props.",this.props);
+        this.getUserDetails();
     }
 
-    shouldDeployContract = async (web3 : Web3) => {
-      
-        const networkId = await web3.eth.net.getId();
-        const networkData = SocialNetwork.networks[networkId];  
-        let socialNetwork = null;
-        if(networkData){
-          //bad to override transactionConfirmationBlocks' value, overridden here for test environment
-          socialNetwork = new web3.eth.Contract(SocialNetwork.abi, networkData.address, {transactionConfirmationBlocks: 1});
-          this.setState({ contract: socialNetwork });
-          const user = await socialNetwork.methods.getUserIdFromAddress(this.state.userAddress).call();
-          console.log("Usrt",user);
-            if(!(user > 0)){
-                this.setState({ userExists: false, firstTimeLogin: -1 });
-            }
-            else{        
-                const userInfo = await socialNetwork.methods.getUserInfo().call({from: this.state.userAddress});
-                const userDetails: UserDetails = {
-                    id: userInfo[0],
-                    name: userInfo[1],
-                    followersCount: userInfo[2],
-                    followingCount: userInfo[3],
-                    tipObtained: userInfo[4],
-                    tipDonated: userInfo[5]
-                };
-                this.setState({ userExists: true, userDetails });
-            }
+    getUserDetails = async () => {
+        const user = await this.props.contract.methods.getUserIdFromAddress(this.props.userAddress).call();
+        console.log("Usrt",user);
+        if(!(user > 0)){
+            this.setState({ userExists: false, firstTimeLogin: -1 });
         }
-        else{
-          window.alert("Social Network contract not deployed to detected network");
+        else{        
+            const userInfo = await this.props.contract.methods.getUserInfo().call({from: this.props.userAddress});
+            const userDetails: UserDetails = {
+                id: userInfo[0],
+                name: userInfo[1],
+                followersCount: userInfo[2],
+                followingCount: userInfo[3],
+                tipObtained: userInfo[4],
+                tipDonated: userInfo[5]
+            };
+            this.setState({ userExists: true, userDetails });
         }
-      };
+    }
 
     connectWallet = () => {
         this.props.connector.connect();
@@ -79,10 +60,10 @@ export default class LoginPage extends React.Component<any, any>{
 
     createUser = async (userName) => {
         this.setState({ creatingUser: true });
-        const gasEstimate = await this.state.contract.methods.autoCreateUser(userName).estimateGas({ from: this.state.userAddress });
-        this.state.contract.methods.autoCreateUser(userName).send({from: this.state.userAddress, gas: gasEstimate})
+        const gasEstimate = await this.props.contract.methods.autoCreateUser(userName).estimateGas({ from: this.props.userAddress });
+        this.props.contract.methods.autoCreateUser(userName).send({from: this.props.userAddress, gas: gasEstimate})
         .once('receipt', (receipt) => {
-          this.setState({ creatingUser: false }, () => this.shouldDeployContract(this.state.web3));
+          this.setState({ creatingUser: false }, () => this.getUserDetails());
         });
     }
 
@@ -107,17 +88,12 @@ export default class LoginPage extends React.Component<any, any>{
       
             {!this.state.userExists ? (!this.state.creatingUser ? (
                     <SignUpForm
-                    web3={this.state.web3}
-                    contract={this.state.contract}
+                    web3={this.props.web3}
+                    contract={this.props.contract}
                     createUser={this.createUser}
                     />) : (<ActivityIndicator/>)) : (                  
                 <TouchableWithoutFeedback
-                        onPress={ () => { this.props.navigation.navigate('HomePage', {
-                            // userDetails: this.state.userDetails,
-                            userAddress: this.state.userAddress,
-                            contract: this.state.contract,
-                            // connector: this.props.connector
-                        })}}
+                        onPress={ () => { this.props.navigation.navigate('HomePage')}}
                 >
                     <Text style={styles.title}>INSTANT LOGIN as {this.state.userDetails.name}</Text>
             </TouchableWithoutFeedback>
