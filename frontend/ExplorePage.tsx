@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback, ScrollView } from 'react-native';
 import globalCatalog from './CatalogDB';
 import { navigationRef } from './RootNavigation';
 import {getIpfsHashFromBytes32} from './utils/ipfs';
@@ -31,12 +31,6 @@ export default class ExplorePage extends React.Component<any,{
     let newPosts: Array<any> =  [];
     for(var i = 1; i <= postCount; i++){
       let post = await this.props.contract.methods.getPostFromPostId(i).call();
-      post.postImage = '';
-      fetch(`https://ipfs.io/ipfs/${getIpfsHashFromBytes32(post.picIpfsHash)}`)
-      .then(res => res.blob())
-      .then(blob => {
-          post.postImage = blob;
-      });
       newPosts = [...newPosts, post];
     }
     this.setState({ allPosts: newPosts, fetchPosts: false });
@@ -55,7 +49,7 @@ export default class ExplorePage extends React.Component<any,{
             
             return(
                 <TouchableWithoutFeedback
-                    onPress={ () => this.props.navigation.navigate('PostDetail', { id: web3.utils.hexToNumber(item.authorId)})}
+                    onPress={ () => this.props.navigation.navigate('PostDetail', { post: item })}
                 >
                     <View style={styles.products}>
                         <Text>{item.authorName} : {web3.utils.hexToNumber(item.authorId)}</Text>
@@ -65,7 +59,7 @@ export default class ExplorePage extends React.Component<any,{
                         <View style={styles.productImage}>
                             <Image
                                 style={styles.thumbNail}
-                                source={{ uri: URL.createObjectURL(item.postImage) }}
+                                source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(item.picIpfsHash)}` }}
                             />
                         </View>
                         <View style={styles.productText}>
@@ -97,11 +91,13 @@ export default class ExplorePage extends React.Component<any,{
 
         return(
             <View style={styles.container}>
-                <FlatList
-                    data={this.state.allPosts}
-                    renderItem={postItem}
-                    keyExtractor={(item) => item.modelNumber}
-                />
+                <ScrollView>
+                    <FlatList
+                        data={this.state.allPosts}
+                        renderItem={postItem}
+                        keyExtractor={(item) => item.modelNumber}
+                    />
+                </ScrollView>
             </View>
         );
     }

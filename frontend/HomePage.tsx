@@ -15,7 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function HomePage({ route, navigation, userAddress, contract }): JSX.Element{
 
-  const [image, setImage] = React.useState(null);
+  const [image, setImage] = React.useState(undefined);
+  const [imageBlob, setImageBlob] = React.useState(undefined);
 
   React.useEffect(() => {    
     (async () => {
@@ -52,6 +53,16 @@ export default function HomePage({ route, navigation, userAddress, contract }): 
     console.log(result);
 
     if (!result.cancelled) {
+      fetch(result.uri)
+      .then(res => res.blob())
+      .then(blob => {
+        
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(blob);
+        reader.onloadend = () => {
+          setImageBlob(Buffer(reader.result));
+        }
+      })
       setImage(result.uri);
     }
   }
@@ -60,12 +71,12 @@ export default function HomePage({ route, navigation, userAddress, contract }): 
   
   const onSubmit = async (data: PostFormData) => {
     console.log('data', JSON.stringify(data));
-    if(!!image){
-      console.log("uploading image....", image);
-      ipfs.add(image)
+    if(!!imageBlob && !!image){
+      console.log("uploading image....", imageBlob);
+      ipfs.add(imageBlob)
       .then(result => {
         console.log("Upload successfull. Sending a request to create a post",result);
-        createAPost(data.postContent,data.postUrl, getBytes32FromIpfsHash(result));
+        createAPost(data.postContent,data.postUrl, getBytes32FromIpfsHash(result[0].path));
       })
       .catch(error => console.error(error));
     }
@@ -86,9 +97,8 @@ export default function HomePage({ route, navigation, userAddress, contract }): 
           <Button title="Clear" onPress={() => reset()} />
         </Form>
           <Text>
-            Preview:
+            Image Preview:
           </Text>
-          {/* {image && <Image ref={register} source={URL.createObjectURL(image)} style={{ width: 200, height: 200 }} />} */}
           {image && <Image ref={register} source={{uri: image}} style={{ width: 200, height: 200 }} />}
     </View>
   );

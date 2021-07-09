@@ -1,80 +1,107 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import AppLoading from 'expo-app-loading';
+import MyNetworkPage from './MyNetworkPage';
 
-export default function ProfilePage({ route }): JSX.Element{
+export default function ProfilePage({ web3, contract, userAddress, userDetails, route, navigation }): JSX.Element{
      
-    const [name, nameChange] = useState('');
-    const [email, emailChange] = useState('');
-    const [phone, phoneChange] = useState('');
-    const [message, messageChange] = useState('');
-    const [submitError, setError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [myPosts, setMyPosts] = useState([]);
+    const [accBalance, setAccountBalance] = useState(0.0);
+    const [myFollowingIds, setMyFollowingIds] = useState([]);
+    const [myFollowerIds, setMyFollowerIds] = useState([]);
+    const [followingIdStringList, setFollowingIdStringList] = useState([]);
     const [submitted, trySubmit] = useState(false);
+    const isFocused = useIsFocused();
 
     const { model, modelNumber } = route.params;
 
-    useEffect( () => {
-        if(model !== 'Footer'){
-            const newProfile = `${model} model#: ${modelNumber}`;
-            messageChange(newProfile);
-        }
-        else{
-            
-        }
-    }, []);
-
-    const postMessage = () => {
-        if( !name || !email || !message){
-            setError(true);
-        }
-        else{
-            setError(false);
-            trySubmit(true);
-        }
+    const fetchAccountBalance = () => {
+        web3.eth.getBalance(userAddress).then((accountBalance) => {
+            const floatBal = parseFloat(web3.utils.fromWei(accountBalance, 'Ether'));
+            console.log("final bal:",floatBal , typeof(floatBal));
+            setAccountBalance(floatBal);
+        });
     }
+
+    const fetchMyPosts = async () => {    
+        const myPosts = await contract.methods.getMyPosts(userDetails.id).call({from: userAddress});
+        setMyPosts(myPosts);
+    }
+
+    const fetchMySocialNetworkIds = () => {
+        setIsLoading(true);
+        contract.methods.getWholeNetworkForAnId(userDetails.id).call({from: userAddress})
+        .then((result) => {
+            console.log("Ner",result);
+            setMyFollowingIds(result[0]);
+            setMyFollowerIds(result[1]);
+            setIsLoading(false);
+            convertFollowingIdsFromBNtoStrings();
+        });
+    }
+
+    const convertFollowingIdsFromBNtoStrings = () => {
+        setIsLoading(true);
+        let followingIdStringList = [];
+        myFollowingIds.map((idBN,index) => {
+            followingIdStringList.push(idBN.toString());
+        });
+        setFollowingIdStringList(followingIdStringList);
+        setIsLoading(false);
+    }
+
+    const getAllHistory = () => {    
+        contract.events.PostCreated({
+            filter: {}, // Using an array means OR: e.g. 20 or 23
+            fromBlock: 0
+        }, function(error, event){ 
+        
+            console.log(event); 
+            })
+            .on('data', function(event){
+                console.log("Inside events:", event); 
+                this.setState({ logMessage: "Hide All Logs"});// same results as the optional callback above
+            })
+            .on('changed', function(event){
+                // remove event from local database
+            })
+            .on('error', console.error);
+    }
+
+    useEffect( () => {        
+        if(!!userDetails){
+            fetchMyPosts();
+            fetchMySocialNetworkIds();
+            fetchAccountBalance();
+        }
+    }, [isFocused]);
+    
     return(
         <View style={styles.container}>
             <ScrollView>
-                {submitError ? 
-                    <Text style={styles.status}>
-                        You didn't enter a Name, Email or Message
-                    </Text>  :
-                    <Text style={styles.status}>
-                        Please enter the requested information
-                    </Text>
-                }
-                {submitted ? 
-                    <Text>
-                        Name : {name} Email : {email}
-                    </Text> :
-                    <Text style={styles.req}>* required</Text>
-                }
-
-                <Text style={styles.label}>Name *</Text>
-                <TextInput style={styles.input}
-                    onChangeText={ text => nameChange(text)}
-                    value={name}
-                />
-
-                <Text style={styles.label}>Phone Number</Text>
-                <TextInput style={styles.input}
-                    onChangeText={ text => phoneChange(text)}
-                    value={phone}
-                />
-
-                <Text style={styles.label}>Message *</Text>
-                <TextInput style={styles.input}
-                    onChangeText={ text => messageChange(text)}
-                    value={message}
-                    multiline
-                    numberOfLines={5}
-                />
-
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => postMessage()}
-                >
-                    <Text>Submit</Text>
-                </TouchableOpacity>
+                <Text>{userDetails.name}</Text>
+                <Text>Id: {web3.utils.hexToNumber(userDetails.id)}</Text>
+                <Text>Coin Balance: {accBalance} ETH</Text>
+                <Text>Followers: {web3.utils.hexToNumber(userDetails.followersCount)}</Text>
+                <Text>Following: {web3.utils.hexToNumberString(userDetails.followingCount)}</Text>
+                <Text>Tips: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
+                <Text>Tip Obtained: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
+                <Text>Tip Donated: {web3.utils.fromWei(userDetails.tipDonated.toString(), 'Ether')} ETH</Text>
+                {isLoading ? <AppLoading/> : 
+                 (
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => navigation.navigate('MyNetwork', { 
+                            followerIds: myFollowerIds,
+                            followingIds: myFollowingIds,
+                            followingIdStringList: followingIdStringList,                            
+                         })}
+                    >
+                        <Text style={styles.label}>View your network</Text>
+                    </TouchableOpacity>
+                )}
             </ScrollView>
         </View>
     );

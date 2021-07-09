@@ -2,19 +2,19 @@ import React from 'react';
 import bs58 from 'bs58';
 //old versions
 
-// const IPFS = require('ipfs-api');
-// const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https'});
+const IPFS = require('ipfs-api');
+const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https'});
 
 // const {ipfsClient} = require('ipfs-http-client');
 // const ipfs = new ipfsClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https'});
 // const ipfs = ipfsClient(new URL('https://ipfs.infura.io:5001'));
 
-const IPFS = require('ipfs-mini');
-const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
+// const IPFS = require('ipfs-mini');
+// const ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
  
 //new versions
 // const { create } = require('ipfs-http-client');
-// connect to a different API
+// // connect to a different API
 // const ipfs = create(new URL('https://ipfs.infura.io:5001'));
 
 // Return bytes32 hex string from base58 encoded ipfs hash,

@@ -21,6 +21,7 @@ import ProfilePage from './Profile';
 import PostDetail from './PostDetail';
 import ExplorePage from './ExplorePage';
 import LoginPage from './LoginPage';
+import MyNetworkPage from './MyNetworkPage';
 import SocialNetwork from '../abis/SocialNetwork.json';
 
 const GANACHE_PORT:string = "7545";
@@ -39,18 +40,20 @@ function App(): JSX.Element {
   const [contract, setContract] = useState(undefined);
   const [web3, setWeb3] = useState(null);
   const [initialSetup, setInitialSetup] = useState(true);
+  const [userDetails, setUserDetails] = useState([]);
+
+  const setUserDetailsFromLoginPage = (userDetails) => {
+    // console.log("From lgin page", userDetails);
+    setUserDetails(userDetails);
+  }
 
   useEffect(() => {
     (async () => {
-    if(!!contract){
-      setInitialSetup(false);
-    }
-    else{
       const web3 = new Web3(new Web3.providers.HttpProvider(`http://${GANACHE_IP_ADDRESS}:${GANACHE_PORT}`));        
       setWeb3(web3);
       
       const accounts = await web3.eth.getAccounts();
-      setUserAddress(accounts[1]);
+      Platform.OS === 'web' ? setUserAddress(accounts[1]) : setUserAddress(accounts[2]);
       console.log("addres",accounts);
       
       const networkId = await web3.eth.net.getId();
@@ -59,16 +62,16 @@ function App(): JSX.Element {
         //bad to override transactionConfirmationBlocks' value, overridden here for test environment
         const socialNetwork = new web3.eth.Contract(SocialNetwork.abi, networkData.address, {transactionConfirmationBlocks: 1});
         setContract(socialNetwork);
+        setInitialSetup(false);
       }
       else{
         window.alert("Social Network contract not deployed to detected network");
       }
-    }
       
     })();
-  },[contract]);
+  },[]);
 
-  if(!fontsLoaded && !!initialSetup){
+  if(!fontsLoaded && typeof initialSetup === 'undefined'){
     return (
       <AppLoading/>
     ); 
@@ -85,13 +88,14 @@ function App(): JSX.Element {
             options={{
               header: (props) => <Header {...props} headerDisplay="Ethereum-Dapp-SocialNetwork"/>
             }}>
-              {props => <LoginPage 
+              {props => !!contract && (<LoginPage 
                           {...props}
                           connector={connector}
                           userAddress={userAddress}
                           contract={contract}
                           web3={web3}
-                        />}
+                          setUserDetailsFromLoginPage={setUserDetailsFromLoginPage}
+                        />)}
           </Stack.Screen>
           <Stack.Screen 
             name="HomePage"
@@ -121,19 +125,33 @@ function App(): JSX.Element {
             }}
           />
           <Stack.Screen 
-            name="Profile" 
-            component={ProfilePage} 
+            name="Profile"
             options={{
               header: (props) => <Header {...props} headerDisplay="Profile"/>
             }}
-          />
+          >
+              {props => <ProfilePage 
+                    {...props}
+                    userAddress={userAddress}
+                    contract={contract}
+                    userDetails={userDetails}
+                    web3={web3}
+                  />}
+
+          </Stack.Screen>
           <Stack.Screen 
             name="PostDetail" 
-            component={PostDetail} 
             options={{
               header: (props) => <Header {...props} headerDisplay="PostDetail"/>
             }}
-          />
+          >
+          {props => <PostDetail 
+                    {...props}
+                    userAddress={userAddress}
+                    contract={contract}
+                    web3={web3}
+                  />}
+          </Stack.Screen>
           <Stack.Screen 
             name="Explore"
             options={{
@@ -141,6 +159,19 @@ function App(): JSX.Element {
             }}
           >
             {props => <ExplorePage 
+                      {...props}
+                      userAddress={userAddress}
+                      contract={contract}
+                      web3={web3}
+                    />}
+          </Stack.Screen>
+          <Stack.Screen 
+            name="MyNetwork"
+            options={{
+              header: (props) => <Header {...props} headerDisplay="Your Network"/>
+            }}
+          >
+            {props => <MyNetworkPage 
                       {...props}
                       userAddress={userAddress}
                       contract={contract}

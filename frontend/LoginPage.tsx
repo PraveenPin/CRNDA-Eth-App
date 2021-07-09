@@ -46,7 +46,7 @@ export default class LoginPage extends React.Component<any, any>{
                 tipObtained: userInfo[4],
                 tipDonated: userInfo[5]
             };
-            this.setState({ userExists: true, userDetails });
+            this.setState({ userExists: true, userDetails }, () => this.props.setUserDetailsFromLoginPage(userDetails));
         }
     }
 
