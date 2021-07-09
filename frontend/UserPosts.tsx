@@ -1,38 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, TouchableWithoutFeedback, FlatList, Image } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, FlatList, TouchableWithoutFeedback, Image } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import AppLoading from 'expo-app-loading';
 import Identicon from 'identicon.js';
 import { getIpfsHashFromBytes32 } from './utils/ipfs';
 
-export default function ProfilePage({ web3, contract, userAddress, userDetails, route, navigation }): JSX.Element{
+export default function ProfilePage({ web3, contract, userAddress, route, navigation }): JSX.Element{
      
+    const { userId } = route.params;
     const [isLoading, setIsLoading] = useState(true);
-    const [myPosts, setMyPosts] = useState([]);
+    const [userPosts, setUserPosts] = useState([]);
     const [accBalance, setAccountBalance] = useState(0.0);
     const [myFollowingIds, setMyFollowingIds] = useState([]);
     const [myFollowerIds, setMyFollowerIds] = useState([]);
     const [followingIdStringList, setFollowingIdStringList] = useState([]);
+    const [userFullDetails, setUserFullDetails] = useState(undefined);
     const isFocused = useIsFocused();
-    
-
-    const fetchAccountBalance = () => {
-        web3.eth.getBalance(userAddress).then((accountBalance) => {
-            const floatBal = parseFloat(web3.utils.fromWei(accountBalance, 'Ether'));
-            console.log("final bal:",floatBal , typeof(floatBal));
-            setAccountBalance(floatBal);
-        });
-    }
-
-    const fetchMyPosts = async () => {    
-        const myPosts = await contract.methods.getMyPosts(userDetails.id).call({from: userAddress});
-        setMyPosts(myPosts);
-    }
 
     const fetchMySocialNetworkIds = async () => {
         setIsLoading(true);
-        const result = await contract.methods.getWholeNetworkForAnId(userDetails.id).call({from: userAddress})        
-        console.log("Ner",result);
+        const result = await contract.methods.getWholeNetworkForAnId(userId).call({from: userAddress})        
         setMyFollowingIds(result[0]);
         setMyFollowerIds(result[1]);
         setIsLoading(false);
@@ -49,32 +36,32 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
         setIsLoading(false);
     }
 
-    const getAllHistory = () => {    
-        contract.events.PostCreated({
-            filter: {}, // Using an array means OR: e.g. 20 or 23
-            fromBlock: 0
-        }, function(error, event){ 
-        
-            console.log(event); 
-            })
-            .on('data', function(event){
-                console.log("Inside events:", event); 
-                this.setState({ logMessage: "Hide All Logs"});// same results as the optional callback above
-            })
-            .on('changed', function(event){
-                // remove event from local database
-            })
-            .on('error', console.error);
+    const getUserInfo = async (id) => {
+        const userInfo = await contract.methods.getUserData(id).call({from: userAddress});
+        console.log("User Data:", userInfo);
+        setUserFullDetails({
+            id: userInfo[0],
+            name: userInfo[1],
+            followersCount: userInfo[2],
+            followingCount: userInfo[3],
+            tipObtained: userInfo[4],
+            tipDonated: userInfo[5]
+        });
+    }
+
+    const getUserPosts = async (id) => {
+        const userPosts = await contract.methods.getMyPosts(id).call({from: userAddress});
+        setUserPosts(userPosts);
     }
 
     useEffect( () => {        
-        if(!!userDetails){
-            fetchMyPosts();
-            fetchMySocialNetworkIds();
-            fetchAccountBalance();
-        }
+        getUserInfo(userId);
+        getUserPosts(userId);
+        fetchMySocialNetworkIds();
     }, [isFocused]);
 
+
+    
     const postItem = ({item}) => {     
         console.log("post",item);
         
@@ -105,36 +92,37 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
     
     return(
         <View style={styles.container}>
+            {!!userFullDetails && (
+                
             <ScrollView>
-                <Text>{userDetails.name}</Text>
-                <Text>Id: {web3.utils.hexToNumber(userDetails.id)}</Text>
+                <Text>{userFullDetails.name}</Text>
+                <Text>Id: {web3.utils.hexToNumber(userFullDetails.id)}</Text>
                 <Text>Coin Balance: {accBalance} ETH</Text>
-                <Text>Followers: {web3.utils.hexToNumber(userDetails.followersCount)}</Text>
-                <Text>Following: {web3.utils.hexToNumberString(userDetails.followingCount)}</Text>
-                <Text>Tips: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
-                <Text>Tip Obtained: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
-                <Text>Tip Donated: {web3.utils.fromWei(userDetails.tipDonated.toString(), 'Ether')} ETH</Text>
+                <Text>Followers: {web3.utils.hexToNumber(userFullDetails.followersCount)}</Text>
+                <Text>Following: {web3.utils.hexToNumberString(userFullDetails.followingCount)}</Text>
+                <Text>Tips: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text>
+                <Text>Tip Obtained: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text>
+                <Text>Tip Donated: {web3.utils.fromWei(userFullDetails.tipDonated.toString(), 'Ether')} ETH</Text>
                 {isLoading ? <AppLoading/> : 
-                 (
+                (
                     <TouchableOpacity
                         style={styles.button}
                         onPress={() => navigation.navigate('MyNetwork', { 
                             followerIds: myFollowerIds,
                             followingIds: myFollowingIds,
                             followingIdStringList: followingIdStringList,                            
-                         })}
+                        })}
                     >
-                        <Text style={styles.label}>View your network</Text>
+                        <Text style={styles.label}>View their network</Text>
                     </TouchableOpacity>
-                )}     
-                <ScrollView>
-                    <FlatList
-                        data={myPosts}
-                        renderItem={postItem}
-                        keyExtractor={(item) => item.modelNumber}
-                    />
-                </ScrollView>
+                )}
+                <FlatList
+                    data={userPosts}
+                    renderItem={postItem}
+                    keyExtractor={(item) => item.modelNumber}
+                />
             </ScrollView>
+            )}
         </View>
     );
 }
@@ -178,10 +166,6 @@ const styles = StyleSheet.create({
         marginLeft: 'auto',
         paddingTop: 10
     },
-    status:{
-        paddingTop: 10,
-        paddingBottom: 15
-    },
     thumbNail: {
         height: 260,
         width: '100%'
@@ -201,4 +185,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontFamily: 'OpenSans'
     },
+    status:{
+        paddingTop: 10,
+        paddingBottom: 15
+    }
 });

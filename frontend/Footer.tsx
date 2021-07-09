@@ -7,7 +7,7 @@ export default function Footer(props): JSX.Element {
         <View style={styles.footer}>
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => RootNavigation.navigate('HomePage')}
+                    onPress={() => RootNavigation.navigate('Ethereum-Dapp-SocialNetwork')}
                 >
                     <Text>Home</Text>
                 </TouchableOpacity>

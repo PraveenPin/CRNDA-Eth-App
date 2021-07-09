@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback, Scro
 import globalCatalog from './CatalogDB';
 import { navigationRef } from './RootNavigation';
 import {getIpfsHashFromBytes32} from './utils/ipfs';
+import Identicon from 'identicon.js';
 
 export default class ExplorePage extends React.Component<any,{
     catalogData: any, 
@@ -49,13 +50,13 @@ export default class ExplorePage extends React.Component<any,{
             
             return(
                 <TouchableWithoutFeedback
-                    onPress={ () => this.props.navigation.navigate('PostDetail', { post: item })}
+                    onPress={ () => this.props.navigation.navigate('PostDetail', { myPost: item, postId: item.pid })}
                 >
                     <View style={styles.products}>
                         <Text>{item.authorName} : {web3.utils.hexToNumber(item.authorId)}</Text>
-                        {/* <Image style={{ width: 30, height: 30 }}
-                         source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
-                        /> */}
+                        <Image style={{ width: 30, height: 30 }}
+                         source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
+                        />
                         <View style={styles.productImage}>
                             <Image
                                 style={styles.thumbNail}

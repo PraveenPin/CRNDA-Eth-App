@@ -22,6 +22,7 @@ import PostDetail from './PostDetail';
 import ExplorePage from './ExplorePage';
 import LoginPage from './LoginPage';
 import MyNetworkPage from './MyNetworkPage';
+import UserPosts from './UserPosts';
 import SocialNetwork from '../abis/SocialNetwork.json';
 
 const GANACHE_PORT:string = "7545";
@@ -172,6 +173,19 @@ function App(): JSX.Element {
             }}
           >
             {props => <MyNetworkPage 
+                      {...props}
+                      userAddress={userAddress}
+                      contract={contract}
+                      web3={web3}
+                    />}
+          </Stack.Screen>
+          <Stack.Screen 
+            name="UserPosts"
+            options={{
+              header: (props) => <Header {...props} headerDisplay="Posts"/>
+            }}
+          >
+            {props => <UserPosts 
                       {...props}
                       userAddress={userAddress}
                       contract={contract}

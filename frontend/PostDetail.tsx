@@ -3,9 +3,10 @@ import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, TextInput 
 import { useIsFocused } from '@react-navigation/native';
 import {getIpfsHashFromBytes32} from './utils/ipfs';
 import AppLoading from 'expo-app-loading';
+import Identicon from 'identicon.js';
 
 export default function PostDetail({ userAddress, contract, web3, route, navigation }){
-    const { post } = route.params;
+    const { myPost, postId } = route.params;
 
     const [isLoading, setIsLoading] = useState(true);
     const [myFollowingIds, setMyFollowing] = useState([]);
@@ -13,26 +14,34 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     const [followingIdStringList, setFollowingIdStringList] = useState([]);
     const [tip, setTip] = useState("");
     const [tempTip, setTempTip] = useState("");
+    const [post, setPost] = useState(myPost);
     const isFocused = useIsFocused();
 
     useEffect(() => {
-            setIsLoading(true);
-            contract.methods.getAllFollowingIds().call({from: userAddress})
+        setup();
+    },[isFocused]);
+    
+
+    const setup = async (reload = false) => {
+        setIsLoading(true);
+        if(reload){   
+            const post = await contract.methods.getPostFromPostId(postId).call();
+            console.log("ReFetching post **************************", post);
+            setPost(post);
+        }
+        contract.methods.getAllFollowingIds().call({from: userAddress})
             .then((result) => {
                 setMyFollowing(result[0]);
                 setMyFollowers(result[1]);
-                setIsLoading(false);
             });
             
-            setIsLoading(true);
             let followingIdStringList = [];
             myFollowingIds.map((idBN) => {
               followingIdStringList.push(idBN.toString());
             });
             setFollowingIdStringList(followingIdStringList);
             setIsLoading(false);
-    },[isFocused]);
-    
+    }
 
     const followAuthor = async (authorId) => {
         const TRANSFER_GAS_ESTIMATION = await contract.methods.followAuthor(authorId).estimateGas({ from : userAddress });
@@ -40,6 +49,7 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
         contract.methods.followAuthor(authorId).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
         .once('receipt', (receipt) => {
           console.log("r:",receipt);
+          setup(true);
         });
         //notification for following
     }
@@ -49,7 +59,8 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
         console.log("Gas for unfollowing author",TRANSFER_GAS_ESTIMATION);
         contract.methods.unFollowAuthor(authorId).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
         .once('receipt', (receipt) => {
-        console.log("r:",receipt);
+            console.log("r:",receipt);
+            setup(true);
         });
         //notification for following
     }
@@ -63,7 +74,8 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
             setIsLoading(false);
             setTempTip('');
             setTip('');
-        });       
+            setup(true);
+        });
     }
 
 
@@ -78,9 +90,9 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
             {isLoading ? <AppLoading/> :
             (<ScrollView>
                 <Text>{post.authorName} : {web3.utils.hexToNumber(post.authorId)}</Text>
-                {/* <Image style={{ width: 30, height: 30 }}
+                <Image style={{ width: 30, height: 30 }}
                     source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
-                /> */}
+                />
                 <Image
                     style={styles.thumbNail}
                     source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(post.picIpfsHash)}` }}
