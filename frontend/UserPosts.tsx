@@ -70,7 +70,7 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
                 onPress={ () => navigation.navigate('PostDetail', { myPost: item, postId: item.pid })}
             >
                 <View>
-                    <Text>{item.authorName} : {web3.utils.hexToNumber(item.authorId)}</Text>
+                    <Text>{item.authorName} : {item.authorId}</Text>
                     <Image style={{ width: 30, height: 30 }}
                      source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
                     />
@@ -90,19 +90,21 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
         );
     }
     
+    console.log("in usr posts",myFollowerIds, "ing->", myFollowingIds)
+
     return(
         <View style={styles.container}>
             {!!userFullDetails && (
                 
             <ScrollView>
                 <Text>{userFullDetails.name}</Text>
-                <Text>Id: {web3.utils.hexToNumber(userFullDetails.id)}</Text>
-                <Text>Coin Balance: {accBalance} ETH</Text>
-                <Text>Followers: {web3.utils.hexToNumber(userFullDetails.followersCount)}</Text>
+                <Text>Id: {userFullDetails.id}</Text>
+                {/* <Text>Coin Balance: {accBalance} ETH</Text> */}
+                <Text>Followers: {userFullDetails.followersCount}</Text>
                 <Text>Following: {web3.utils.hexToNumberString(userFullDetails.followingCount)}</Text>
-                <Text>Tips: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text>
-                <Text>Tip Obtained: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text>
-                <Text>Tip Donated: {web3.utils.fromWei(userFullDetails.tipDonated.toString(), 'Ether')} ETH</Text>
+                {/* <Text>Tips: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text> */}
+                {/* <Text>Tip Obtained: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text> */}
+                {/* <Text>Tip Donated: {web3.utils.fromWei(userFullDetails.tipDonated.toString(), 'Ether')} ETH</Text> */}
                 {isLoading ? <AppLoading/> : 
                 (
                     <TouchableOpacity

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import globalCatalog from './CatalogDB';
 import { navigationRef } from './RootNavigation';
 import {getIpfsHashFromBytes32} from './utils/ipfs';
@@ -8,13 +8,21 @@ import Identicon from 'identicon.js';
 export default class ExplorePage extends React.Component<any,{
     catalogData: any, 
     fetchPosts: boolean,
-    allPosts: Array<any> }>{
+    allPosts: Array<any>,
+    headerText: string,
+    searchKeyWord: string,
+    showSearchResults: boolean,
+    searchResults: Array<any> }>{
     constructor(props){
         super(props);
         this.state={
             catalogData: globalCatalog,
             fetchPosts: true,
-            allPosts: []
+            allPosts: [],
+            headerText: "All Posts",
+            searchKeyWord: '',
+            showSearchResults: false,
+            searchResults: []
         }
     }
 
@@ -28,7 +36,7 @@ export default class ExplorePage extends React.Component<any,{
     const postCount = await this.props.contract.methods.postCount().call(); // this calls the method and returns the postCount
     //call methods just read data from blockchain, costs no gas
     //send methods writes data on blockchain, costs gas
-    console.log("Post Count",postCount);
+    // console.log("Post Count",postCount);
     let newPosts: Array<any> =  [];
     for(var i = 1; i <= postCount; i++){
       let post = await this.props.contract.methods.getPostFromPostId(i).call();
@@ -42,6 +50,22 @@ export default class ExplorePage extends React.Component<any,{
         this.setState({ catalogData: data });
     }
 
+    setKeyWordForSearch = (keyWord) => {
+        this.setState({ searchKeyWord: keyWord });
+    }
+
+    showKeyWordPosts = () => {        
+        this.props.contract.methods.getPostsFromTag(this.state.searchKeyWord).call()
+        .then((result) => {
+        console.log("TAGS",result);
+        this.setState({ showSearchResults: true, headerText: `Posts with keyword ${this.state.searchKeyWord}`, searchResults: result });
+        });
+    }
+
+    clearSearchResults = () => {
+        this.setState({ showSearchResults: false, searchKeyWord: '', headerText: 'All Posts' });
+    }
+
     render(){
         const {web3} = this.props;
 
@@ -53,7 +77,7 @@ export default class ExplorePage extends React.Component<any,{
                     onPress={ () => this.props.navigation.navigate('PostDetail', { myPost: item, postId: item.pid })}
                 >
                     <View style={styles.products}>
-                        <Text>{item.authorName} : {web3.utils.hexToNumber(item.authorId)}</Text>
+                        <Text>{item.authorName} : {item.authorId}</Text>
                         <Image style={{ width: 30, height: 30 }}
                          source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
                         />
@@ -92,11 +116,32 @@ export default class ExplorePage extends React.Component<any,{
 
         return(
             <View style={styles.container}>
+                <View style={styles.topSubContainer}>
+                    <TextInput
+                        placeholder="Type a keyword..."
+                        onChangeText={ val => this.setKeyWordForSearch(val)}
+                        value={this.state.searchKeyWord}
+                    />
+                    <TouchableOpacity
+                            // style={styles.button}
+                            onPress={this.showKeyWordPosts}
+                        >
+                            <Text>Search</Text>
+                        </TouchableOpacity>
+                    {this.state.showSearchResults && (
+                    <TouchableOpacity
+                        // style={styles.button}
+                        onPress={this.clearSearchResults}
+                    >
+                        <Text>Clear Results</Text>
+                    </TouchableOpacity>)}
+                </View>
+                <Text>{this.state.headerText}</Text>
                 <ScrollView>
                     <FlatList
-                        data={this.state.allPosts}
+                        data={ this.state.showSearchResults ? this.state.searchResults : this.state.allPosts}
                         renderItem={postItem}
-                        keyExtractor={(item) => item.modelNumber}
+                        keyExtractor={(item) => item.pid}
                     />
                 </ScrollView>
             </View>
@@ -148,5 +193,9 @@ const styles = StyleSheet.create({
     blurb:{
         fontFamily: 'OpenSans',
         fontStyle: 'italic'
+    },
+    topSubContainer: {
+        display: 'flex',
+        flexDirection: 'row'        
     }
 });

@@ -36,10 +36,19 @@ export default class MyNetworkPage extends React.Component<any, any>{
     }
 
     componentDidMount(){
-        console.log("[prosoklkjfk",this.state);
+        this.fetchData();
+    }
+
+    fetchData = () => {        
         this.getFollowersData();
         this.getFollowingData();
         this.reloadValues();
+    }
+
+    componentWillReceiveProps(newProps){
+        console.log("Old->", this.props.route.params, newProps.route.params)
+        this.setState({ selectedId: null, followerIds: newProps.route.params.followerIds,
+             followingIds: newProps.route.params.followingIds }, () => this.fetchData());        
     }
 
     setSwitch = (val) => {
@@ -53,7 +62,6 @@ export default class MyNetworkPage extends React.Component<any, any>{
       console.log("Fetching followers data 11111111",totalFollowersData);
       let userInfo = await this.props.contract.methods.getUserData(this.state.followerIds[i]).call({from: this.props.userAddress});
       totalFollowersData = [...totalFollowersData, userInfo];
-      console.log("Fetching followers data  22222222",totalFollowersData);
     }
     this.setState({ followersData : totalFollowersData, isLoading: false });
   }
@@ -113,7 +121,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
                     <View>
                         <Text>{item[1]}</Text>
                         <Text>Id: {itemId}</Text>
-                        <Text>Followers: {this.props.web3.utils.hexToNumber(item[2])}</Text>
+                        <Text>Followers: {item[2]}</Text>
                         <Text>Following: {this.props.web3.utils.hexToNumberString(item[3])}</Text>
                         {expandMenu && (
                             <View>

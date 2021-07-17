@@ -89,7 +89,7 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
             </TouchableOpacity> */}
             {isLoading ? <AppLoading/> :
             (<ScrollView>
-                <Text>{post.authorName} : {web3.utils.hexToNumber(post.authorId)}</Text>
+                <Text>{post.authorName} : {post.authorId}</Text>
                 <Image style={{ width: 30, height: 30 }}
                     source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
                 />

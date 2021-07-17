@@ -4,11 +4,12 @@ import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native
 import React, { useState, useEffect } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Web3 from 'web3';
-import { useFonts } from 'expo-font';
+// import { useFonts } from 'expo-font';
 import AppLoading from 'expo-app-loading';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Asset } from 'expo-asset';
 
 import { expo } from '../app.json';
 import HomePage from './HomePage';
@@ -24,6 +25,8 @@ import LoginPage from './LoginPage';
 import MyNetworkPage from './MyNetworkPage';
 import UserPosts from './UserPosts';
 import SocialNetwork from '../abis/SocialNetwork.json';
+import * as Font from 'expo-font';
+
 
 const GANACHE_PORT:string = "7545";
 const GANACHE_IP_ADDRESS:string = "192.168.0.8";
@@ -32,9 +35,12 @@ const Stack: any = createStackNavigator();
 
 function App(): JSX.Element {
 
-  let [fontsLoaded] = useFonts({ 
-    'OpenSans': require('../assets/fonts/OpenSans-Regular.ttf')
+  let [fontsLoaded] = Font.useFonts({ 
+    'OpenSans': require('../assets/fonts/OpenSans-Regular.ttf'),
+    // "material-community": require("../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"),
+    // 'MaterialIcons': require('../node_modules/@expo/vector-icons/fonts/MaterialIcons.ttf')
   });
+
   const connector = useWalletConnect();
 
   const [userAddress, setUserAddress] = useState(null);
@@ -42,10 +48,29 @@ function App(): JSX.Element {
   const [web3, setWeb3] = useState(null);
   const [initialSetup, setInitialSetup] = useState(true);
   const [userDetails, setUserDetails] = useState([]);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
 
   const setUserDetailsFromLoginPage = (userDetails) => {
     // console.log("From lgin page", userDetails);
     setUserDetails(userDetails);
+  }
+
+
+  const _cacheResourcesAsync = async () => {
+    const fonts = [require('../assets/fonts/OpenSans-Regular.ttf'),
+      // require("../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"),
+      // require('../node_modules/@expo/vector-icons/fonts/MaterialIcons.ttf')
+    ];
+
+    const cacheFonts = fonts.map(font => {return Asset.fromModule(font).downloadAsync();
+    }); 
+
+    return Promise.all(cacheFonts);
+  }
+
+  const assetsLoadComplete = () => {
+    console.log("Loading fonts");    
+    setAssetsLoaded(true);
   }
 
   useEffect(() => {
@@ -72,9 +97,13 @@ function App(): JSX.Element {
     })();
   },[]);
 
-  if(!fontsLoaded && typeof initialSetup === 'undefined'){
+  if((!fontsLoaded || !assetsLoaded) && typeof initialSetup === 'undefined'){
     return (
-      <AppLoading/>
+      <AppLoading
+        startAsync={_cacheResourcesAsync}
+        onFinish={assetsLoadComplete}
+        onError={console.warn}
+      />
     ); 
   }
   else{

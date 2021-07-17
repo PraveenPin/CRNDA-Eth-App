@@ -3,10 +3,10 @@ import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import * as RootNavigation from './RootNavigation';
 
 export default function Footer(props): JSX.Element {
-    return(
-        <View style={styles.footer}>
-                <TouchableOpacity
-                    style={styles.button}
+        return(
+            <View style={styles.footer}>
+                    <TouchableOpacity
+                        style={styles.button}
                     onPress={() => RootNavigation.navigate('Ethereum-Dapp-SocialNetwork')}
                 >
                     <Text>Home</Text>

@@ -68,7 +68,7 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
     }
 
     useEffect( () => {        
-        if(!!userDetails){
+        if(!userDetails || isFocused){
             fetchMyPosts();
             fetchMySocialNetworkIds();
             fetchAccountBalance();
@@ -83,7 +83,7 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
                 onPress={ () => navigation.navigate('PostDetail', { myPost: item, postId: item.pid })}
             >
                 <View>
-                    <Text>{item.authorName} : {web3.utils.hexToNumber(item.authorId)}</Text>
+                    <Text>{item.authorName} : {item.authorId}</Text>
                     <Image style={{ width: 30, height: 30 }}
                      source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
                     />
@@ -107,9 +107,9 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
         <View style={styles.container}>
             <ScrollView>
                 <Text>{userDetails.name}</Text>
-                <Text>Id: {web3.utils.hexToNumber(userDetails.id)}</Text>
+                <Text>Id: {userDetails.id}</Text>
                 <Text>Coin Balance: {accBalance} ETH</Text>
-                <Text>Followers: {web3.utils.hexToNumber(userDetails.followersCount)}</Text>
+                <Text>Followers: {userDetails.followersCount}</Text>
                 <Text>Following: {web3.utils.hexToNumberString(userDetails.followingCount)}</Text>
                 <Text>Tips: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
                 <Text>Tip Obtained: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
