@@ -3,6 +3,7 @@ import { StyleSheet, Text, Platform, View, TouchableOpacity, Image, Button, Link
 import { Camera } from 'expo-camera';
 import * as Permissions from 'expo-permissions';
 import * as ImagePicker from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { FontAwesome, MaterialIcons, MaterialCommunityIcons  } from '@expo/vector-icons';
 
 export default class CameraComponent extends React.Component<any, any>{
@@ -31,10 +32,11 @@ export default class CameraComponent extends React.Component<any, any>{
     getPermissionAsync = async () => {
         // Camera roll Permission 
         if (Platform.OS === 'ios') {
-          const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-          if (status !== 'granted') {
-            alert('Sorry, we need camera roll permissions to make this work!');
-          }
+          const res = await MediaLibrary.requestPermissionsAsync();
+            console.log("Res",res);
+        //   if (status !== 'granted') {
+        //     alert('Sorry, we need camera roll permissions to make this work!');
+        //   }
         }
         // Camera Permission
         const { status } = await Permissions.askAsync(Permissions.CAMERA);

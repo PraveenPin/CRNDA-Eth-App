@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, FlatList, TouchableWithoutFeedback, Image } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import AppLoading from 'expo-app-loading';
-import Identicon from 'identicon.js';
+import {
+    PacmanIndicator
+  } from 'react-native-indicators';import Identicon from 'identicon.js';
 import { getIpfsHashFromBytes32 } from './utils/ipfs';
 
 export default function ProfilePage({ web3, contract, userAddress, route, navigation }): JSX.Element{
@@ -51,7 +52,7 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
 
     const getUserPosts = async (id) => {
         const userPosts = await contract.methods.getMyPosts(id).call({from: userAddress});
-        setUserPosts(userPosts);
+        setUserPosts(userPosts[1]);
     }
 
     useEffect( () => {        
@@ -94,14 +95,14 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
 
     return(
         <View style={styles.container}>
-            {!!userFullDetails && (
+            {!!userFullDetails ? (
                 
             <ScrollView>
                 <Text>{userFullDetails.name}</Text>
                 <Text>Id: {userFullDetails.id}</Text>
                 {/* <Text>Coin Balance: {accBalance} ETH</Text> */}
                 <Text>Followers: {userFullDetails.followersCount}</Text>
-                <Text>Following: {web3.utils.hexToNumberString(userFullDetails.followingCount)}</Text>
+                <Text>Following: {userFullDetails.followingCount}</Text>
                 {/* <Text>Tips: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text> */}
                 {/* <Text>Tip Obtained: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text> */}
                 {/* <Text>Tip Donated: {web3.utils.fromWei(userFullDetails.tipDonated.toString(), 'Ether')} ETH</Text> */}
@@ -124,7 +125,7 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
                     keyExtractor={(item) => item.modelNumber}
                 />
             </ScrollView>
-            )}
+            ) : (<PacmanIndicator color="black"/>)}
         </View>
     );
 }

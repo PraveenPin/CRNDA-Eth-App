@@ -4,12 +4,10 @@ import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native
 import React, { useState, useEffect } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Web3 from 'web3';
-// import { useFonts } from 'expo-font';
 import AppLoading from 'expo-app-loading';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Asset } from 'expo-asset';
 
 import { expo } from '../app.json';
 import HomePage from './HomePage';
@@ -25,22 +23,14 @@ import LoginPage from './LoginPage';
 import MyNetworkPage from './MyNetworkPage';
 import UserPosts from './UserPosts';
 import SocialNetwork from '../abis/SocialNetwork.json';
-import * as Font from 'expo-font';
 
 
 const GANACHE_PORT:string = "7545";
-const GANACHE_IP_ADDRESS:string = "192.168.0.8";
+const GANACHE_IP_ADDRESS:string = "192.168.0.7";
 
 const Stack: any = createStackNavigator();
 
 function App(): JSX.Element {
-
-  let [fontsLoaded] = Font.useFonts({ 
-    'OpenSans': require('../assets/fonts/OpenSans-Regular.ttf'),
-    // "material-community": require("../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"),
-    // 'MaterialIcons': require('../node_modules/@expo/vector-icons/fonts/MaterialIcons.ttf')
-  });
-
   const connector = useWalletConnect();
 
   const [userAddress, setUserAddress] = useState(null);
@@ -48,29 +38,9 @@ function App(): JSX.Element {
   const [web3, setWeb3] = useState(null);
   const [initialSetup, setInitialSetup] = useState(true);
   const [userDetails, setUserDetails] = useState([]);
-  const [assetsLoaded, setAssetsLoaded] = useState(false);
 
   const setUserDetailsFromLoginPage = (userDetails) => {
-    // console.log("From lgin page", userDetails);
     setUserDetails(userDetails);
-  }
-
-
-  const _cacheResourcesAsync = async () => {
-    const fonts = [require('../assets/fonts/OpenSans-Regular.ttf'),
-      // require("../node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"),
-      // require('../node_modules/@expo/vector-icons/fonts/MaterialIcons.ttf')
-    ];
-
-    const cacheFonts = fonts.map(font => {return Asset.fromModule(font).downloadAsync();
-    }); 
-
-    return Promise.all(cacheFonts);
-  }
-
-  const assetsLoadComplete = () => {
-    console.log("Loading fonts");    
-    setAssetsLoaded(true);
   }
 
   useEffect(() => {
@@ -97,135 +67,131 @@ function App(): JSX.Element {
     })();
   },[]);
 
-  if((!fontsLoaded || !assetsLoaded) && typeof initialSetup === 'undefined'){
+  if(initialSetup){
     return (
-      <AppLoading
-        startAsync={_cacheResourcesAsync}
-        onFinish={assetsLoadComplete}
-        onError={console.warn}
-      />
+      <AppLoading/>
     ); 
   }
-  else{
-    return (      
-      <NavigationContainer
-        // style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}
-        ref={navigationRef}
-      >
-        <Stack.Navigator initialRouteName="LoginPage" headerMode="screen">
-          <Stack.Screen 
-            name="LoginPage" 
-            options={{
-              header: (props) => <Header {...props} headerDisplay="Ethereum-Dapp-SocialNetwork"/>
-            }}>
-              {props => !!contract && (<LoginPage 
-                          {...props}
-                          connector={connector}
-                          userAddress={userAddress}
-                          contract={contract}
-                          web3={web3}
-                          setUserDetailsFromLoginPage={setUserDetailsFromLoginPage}
-                        />)}
-          </Stack.Screen>
-          <Stack.Screen 
-            name="HomePage"
-            options={{
-              header: (props) => <Header {...props} headerDisplay="Welcome !!!"/>
-            }}
-          >
-            {props => <HomePage 
-                      {...props}
-                      userAddress={userAddress}
-                      contract={contract}
-                    />}
 
-          </Stack.Screen>
-          <Stack.Screen 
-            name="NewsDetail" 
-            component={NewsDetail} 
-            options={{
-              header: (props) => <Header {...props} headerDisplay="News"/>
-            }}
-          />
-          <Stack.Screen 
-            name="About" 
-            component={About} 
-            options={{
-              header: (props) => <Header {...props} headerDisplay="About"/>
-            }}
-          />
-          <Stack.Screen 
-            name="Profile"
-            options={{
-              header: (props) => <Header {...props} headerDisplay="Profile"/>
-            }}
-          >
-              {props => <ProfilePage 
+  return (      
+    <NavigationContainer
+      // style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}
+      ref={navigationRef}
+    >
+      <Stack.Navigator initialRouteName="LoginPage" headerMode="screen">
+        <Stack.Screen 
+          name="LoginPage" 
+          options={{
+            header: (props) => <Header {...props} headerDisplay="Ethereum-Dapp-SocialNetwork"/>
+          }}>
+            {props => !!contract && (<LoginPage 
+                        {...props}
+                        connector={connector}
+                        userAddress={userAddress}
+                        contract={contract}
+                        web3={web3}
+                        setUserDetailsFromLoginPage={setUserDetailsFromLoginPage}
+                      />)}
+        </Stack.Screen>
+        <Stack.Screen 
+          name="HomePage"
+          options={{
+            header: (props) => <Header {...props} headerDisplay="Home"/>
+          }}
+        >
+          {props => <HomePage 
                     {...props}
                     userAddress={userAddress}
                     contract={contract}
-                    userDetails={userDetails}
-                    web3={web3}
                   />}
 
-          </Stack.Screen>
-          <Stack.Screen 
-            name="PostDetail" 
-            options={{
-              header: (props) => <Header {...props} headerDisplay="PostDetail"/>
-            }}
-          >
-          {props => <PostDetail 
+        </Stack.Screen>
+        <Stack.Screen 
+          name="NewsDetail" 
+          component={NewsDetail} 
+          options={{
+            header: (props) => <Header {...props} headerDisplay="News"/>
+          }}
+        />
+        <Stack.Screen 
+          name="About" 
+          component={About} 
+          options={{
+            header: (props) => <Header {...props} headerDisplay="About"/>
+          }}
+        />
+        <Stack.Screen 
+          name="Profile"
+          options={{
+            header: (props) => <Header {...props} headerDisplay="Profile"/>
+          }}
+        >
+            {props => <ProfilePage 
+                  {...props}
+                  userAddress={userAddress}
+                  contract={contract}
+                  userDetails={userDetails}
+                  web3={web3}
+                />}
+
+        </Stack.Screen>
+        <Stack.Screen 
+          name="PostDetail" 
+          options={{
+            header: (props) => <Header {...props} headerDisplay="PostDetail"/>
+          }}
+        >
+        {props => <PostDetail 
+                  {...props}
+                  userAddress={userAddress}
+                  contract={contract}
+                  web3={web3}
+                />}
+        </Stack.Screen>
+        <Stack.Screen 
+          name="Explore"
+          options={{
+            header: (props) => <Header {...props} headerDisplay="Explore"/>
+          }}
+        >
+          {props => <ExplorePage 
                     {...props}
                     userAddress={userAddress}
                     contract={contract}
                     web3={web3}
                   />}
-          </Stack.Screen>
-          <Stack.Screen 
-            name="Explore"
-            options={{
-              header: (props) => <Header {...props} headerDisplay="Explore"/>
-            }}
-          >
-            {props => <ExplorePage 
-                      {...props}
-                      userAddress={userAddress}
-                      contract={contract}
-                      web3={web3}
-                    />}
-          </Stack.Screen>
-          <Stack.Screen 
-            name="MyNetwork"
-            options={{
-              header: (props) => <Header {...props} headerDisplay="Your Network"/>
-            }}
-          >
-            {props => <MyNetworkPage 
-                      {...props}
-                      userAddress={userAddress}
-                      contract={contract}
-                      web3={web3}
-                    />}
-          </Stack.Screen>
-          <Stack.Screen 
-            name="UserPosts"
-            options={{
-              header: (props) => <Header {...props} headerDisplay="Posts"/>
-            }}
-          >
-            {props => <UserPosts 
-                      {...props}
-                      userAddress={userAddress}
-                      contract={contract}
-                      web3={web3}
-                    />}
-          </Stack.Screen>
-        </Stack.Navigator>
-        <Footer/>
-      </NavigationContainer>
-    );
-  }
+        </Stack.Screen>
+        <Stack.Screen 
+          name="MyNetwork"
+          options={{
+            header: (props) => <Header {...props} headerDisplay="Your Network"/>
+          }}
+        >
+          {props => <MyNetworkPage 
+                    {...props}
+                    userAddress={userAddress}
+                    contract={contract}
+                    web3={web3}
+                  />}
+        </Stack.Screen>
+        <Stack.Screen 
+          name="UserPosts"
+          options={{
+            header: (props) => <Header {...props} headerDisplay="Posts"/>
+          }}
+        >
+          {props => <UserPosts 
+                    {...props}
+                    userAddress={userAddress}
+                    contract={contract}
+                    web3={web3}
+                  />}
+        </Stack.Screen>
+      </Stack.Navigator>
+      <Footer/>
+    </NavigationContainer>
+  );
+  
   
 }
 

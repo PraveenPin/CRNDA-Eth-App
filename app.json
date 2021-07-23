@@ -2,11 +2,14 @@
   "expo": {
     "name": "Social-Network-Mobile-DApp",
     "version": "1.0.0",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.myreactdapp"
+      "bundleIdentifier": "com.myreactdapp",
+      "userInterfaceStyle": "light"
     },
     "android": {
-      "package": "com.myreactdapp"
+      "package": "com.myreactdapp",
+      "userInterfaceStyle": "dark"
     },
     "assetBundlePatterns": [
       "**/*",

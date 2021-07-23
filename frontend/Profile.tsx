@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, TouchableWithoutFeedback, FlatList, Image } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import AppLoading from 'expo-app-loading';
+import {
+  PacmanIndicator
+} from 'react-native-indicators';
 import Identicon from 'identicon.js';
 import { getIpfsHashFromBytes32 } from './utils/ipfs';
 
@@ -26,7 +28,7 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
 
     const fetchMyPosts = async () => {    
         const myPosts = await contract.methods.getMyPosts(userDetails.id).call({from: userAddress});
-        setMyPosts(myPosts);
+        setMyPosts(myPosts[1]);
     }
 
     const fetchMySocialNetworkIds = async () => {
@@ -110,11 +112,11 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
                 <Text>Id: {userDetails.id}</Text>
                 <Text>Coin Balance: {accBalance} ETH</Text>
                 <Text>Followers: {userDetails.followersCount}</Text>
-                <Text>Following: {web3.utils.hexToNumberString(userDetails.followingCount)}</Text>
+                <Text>Following: {userDetails.followingCount}</Text>
                 <Text>Tips: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
                 <Text>Tip Obtained: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
                 <Text>Tip Donated: {web3.utils.fromWei(userDetails.tipDonated.toString(), 'Ether')} ETH</Text>
-                {isLoading ? <AppLoading/> : 
+                {isLoading ? <PacmanIndicator color="black"/> : 
                  (
                     <TouchableOpacity
                         style={styles.button}
@@ -127,11 +129,12 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
                         <Text style={styles.label}>View your network</Text>
                     </TouchableOpacity>
                 )}     
+                <Text>Posts: </Text>
                 <ScrollView>
                     <FlatList
                         data={myPosts}
                         renderItem={postItem}
-                        keyExtractor={(item) => item.modelNumber}
+                        keyExtractor={(item) => item.pid}
                     />
                 </ScrollView>
             </ScrollView>

@@ -2,8 +2,11 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, TextInput } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import {getIpfsHashFromBytes32} from './utils/ipfs';
-import AppLoading from 'expo-app-loading';
+import {
+  PacmanIndicator
+} from 'react-native-indicators';
 import Identicon from 'identicon.js';
+import Comment from './Comment';
 
 export default function PostDetail({ userAddress, contract, web3, route, navigation }){
     const { myPost, postId } = route.params;
@@ -15,6 +18,9 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     const [tip, setTip] = useState("");
     const [tempTip, setTempTip] = useState("");
     const [post, setPost] = useState(myPost);
+    const [postComments, setPostComments] = useState([]);
+    const [showCommentBox, changeCommentBox] = useState(false);
+
     const isFocused = useIsFocused();
 
     useEffect(() => {
@@ -78,6 +84,31 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
         });
     }
 
+    
+
+  const openCommentsBox = (postId) => {
+    contract.methods.fetchAllComments(postId).call({ from: userAddress })
+    .then((result) => {
+      console.log("Comment list", result);
+      setPostComments(result);
+      changeCommentBox(true);
+    })
+  }
+
+  const closeCommentsBox = () => {
+      changeCommentBox(false);
+  }
+
+  const addCommentToPost = async (postId, comment) => {
+      console.log("aklsjdlaksjdl", postId, comment);
+    const TRANSFER_GAS_ESTIMATION = await contract.methods.createComment(postId, comment).estimateGas({ from: userAddress });
+    console.log("Gas for creating a comment",TRANSFER_GAS_ESTIMATION);
+    
+    await contract.methods.createComment(postId, comment).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION  })
+    .once('receipt', (receipt) => {
+        openCommentsBox(postId);
+    });
+  }
 
     return (
         <View style={styles.container}>
@@ -87,7 +118,7 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
             >
                 <Text style={styles.buttonText}>Go Back</Text>
             </TouchableOpacity> */}
-            {isLoading ? <AppLoading/> :
+            {isLoading ? <PacmanIndicator color="black"/> :
             (<ScrollView>
                 <Text>{post.authorName} : {post.authorId}</Text>
                 <Image style={{ width: 30, height: 30 }}
@@ -130,6 +161,19 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
                 >
                     <Text style={styles.buttonText}>Follow Author</Text>
                 </TouchableOpacity>))}
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => openCommentsBox(post.pid)}
+                    >
+                        <Text style={styles.buttonText}>Show Comments</Text>
+                    </TouchableOpacity>
+                {showCommentBox && <Comment
+                                     postComments={postComments}
+                                     postData={post} 
+                                     addComment={addCommentToPost} 
+                                     navigation={navigation}
+                                     closeCommentsBox={closeCommentsBox}
+                                    />}
             </ScrollView>)}
         </View>
     );

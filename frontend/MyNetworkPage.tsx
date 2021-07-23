@@ -110,8 +110,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
     render(){
     
         const abbrevatedInfo = ({ item }) => {
-            
-            const itemId = this.props.web3.utils.hexToNumber(item[0]);
+            const itemId = item[0];
             const expandMenu = itemId === this.state.selectedId ? true: false
 
             return (
@@ -122,7 +121,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
                         <Text>{item[1]}</Text>
                         <Text>Id: {itemId}</Text>
                         <Text>Followers: {item[2]}</Text>
-                        <Text>Following: {this.props.web3.utils.hexToNumberString(item[3])}</Text>
+                        <Text>Following: {item[3]}</Text>
                         {expandMenu && (
                             <View>
                                 <Text>Tip Obtained: {this.props.web3.utils.fromWei(item[4].toString(), 'Ether')} ETH</Text>

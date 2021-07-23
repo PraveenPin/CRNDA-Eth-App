@@ -1,33 +1,37 @@
 import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import globalCatalog from './CatalogDB';
-import { navigationRef } from './RootNavigation';
-import {getIpfsHashFromBytes32} from './utils/ipfs';
+import {
+    PacmanIndicator
+  } from 'react-native-indicators';
+  import {getIpfsHashFromBytes32} from './utils/ipfs';
 import Identicon from 'identicon.js';
+import MarqueeText from 'react-native-marquee';
 
 export default class ExplorePage extends React.Component<any,{
-    catalogData: any, 
-    fetchPosts: boolean,
+    initialSetup: boolean,
     allPosts: Array<any>,
     headerText: string,
     searchKeyWord: string,
     showSearchResults: boolean,
-    searchResults: Array<any> }>{
+    searchResults: Array<any>,
+    tickerData: string
+     }>{
     constructor(props){
         super(props);
         this.state={
-            catalogData: globalCatalog,
-            fetchPosts: true,
+            initialSetup: true,
             allPosts: [],
             headerText: "All Posts",
             searchKeyWord: '',
             showSearchResults: false,
-            searchResults: []
+            searchResults: [],
+            tickerData: undefined
         }
     }
 
-    componentDidMount(){      
-        this.explorePosts();
+    async componentDidMount(){
+        await this.explorePosts();
+        this.fetchTickerExchangeData();
     }
 
     
@@ -42,13 +46,19 @@ export default class ExplorePage extends React.Component<any,{
       let post = await this.props.contract.methods.getPostFromPostId(i).call();
       newPosts = [...newPosts, post];
     }
-    this.setState({ allPosts: newPosts, fetchPosts: false });
+    this.setState({ allPosts: newPosts, initialSetup: false });
   };
 
+  fetchTickerExchangeData = () => {
+    this.setState({ initialSetup: true });
+    fetch("https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR,INR")
+    .then(res => res.json())
+    .then( result => {
+      const arr = "1 ETH = " + result.BTC + " BTC,   " + result.USD + " USD,   " + result.INR + " INR,   " + result.EUR + " EUR   ";
+      this.setState({ tickerData: arr, initialSetup: false })
+    });
+  }
 
-    setCatalogData = (data) => {
-        this.setState({ catalogData: data });
-    }
 
     setKeyWordForSearch = (keyWord) => {
         this.setState({ searchKeyWord: keyWord });
@@ -95,27 +105,29 @@ export default class ExplorePage extends React.Component<any,{
                     </View>
                 </TouchableWithoutFeedback>
             );
-        }
-
+        }     
         
+        console.log("Ticker data",this.state.tickerData);
 
-        const storyItem = ({ item }) => {
-            return (
-                <TouchableWithoutFeedback
-                    onPress={ () => { this.props.navigation.goBack()}}
-                >
-                    <View style={styles.listings}>
-                        <Text style={styles.title}>{item.title}</Text>
-                        <Image style={styles.thumbNail} source={{ uri: item.urlToImage }}/>
-                        <Text style={styles.blurb}>{item.description}</Text>
-                    </View>
-                </TouchableWithoutFeedback>
-            );
-
-        };
+        if(this.state.initialSetup){
+            return( <PacmanIndicator color="black"/> );
+        }
 
         return(
             <View style={styles.container}>
+                <View>                    
+                    <MarqueeText
+                    style={{ fontSize: 24 }}
+                    duration={5000}
+                    marqueeOnStart
+                    loop
+                    marqueeDelay={1000}
+                    marqueeResetDelay={1000}
+                    useNativeDriver={true}
+                    >
+                    {this.state.tickerData}
+                    </MarqueeText>
+                </View>
                 <View style={styles.topSubContainer}>
                     <TextInput
                         placeholder="Type a keyword..."
