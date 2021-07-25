@@ -28,7 +28,7 @@ export default React.forwardRef<any, Props>(
           multiline
           numberOfLines={3}
           ref={ref}
-          style={[styles.input, { borderColor: error ? '#fc6d47' : '#c0cbd3' }]}
+          style={[styles.input, { borderColor: error ? '#fc6d47' : 'black' }]}
           {...inputProps}
         />
         <Text style={styles.textError}>{error && error.message}</Text>
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#c0cbd3',
+    color: '#292928',
   },
   textError: {
     color: '#fc6d47',

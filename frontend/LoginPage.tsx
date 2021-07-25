@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Button, FlatList } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Button, FlatList } from 'react-native';
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import Web3 from 'web3';
 import SocialNetwork from '../abis/SocialNetwork.json';
@@ -70,33 +70,31 @@ export default class LoginPage extends React.Component<any, any>{
     render(){
 
         return(
-            <View style={[StyleSheet.absoluteFill, styles.center, styles.white]}>
-            {!!this.props.connector && !!this.props.connector.connected ? (
-              <>
-                {/* <TouchableOpacity onPress={signTransaction}>
-                  <Text>Sign a Transaction</Text>
-                </TouchableOpacity> */}
-                <TouchableOpacity onPress={this.disconnectWallet}>
-                  <Text>Kill Session</Text>
-                </TouchableOpacity>
-              </>
-            ): (
-                <TouchableOpacity onPress={this.connectWallet}>
-                  <Text>Connect a Wallet</Text>
-                </TouchableOpacity>
-            )}
+            <View style={[StyleSheet.absoluteFill, styles.center]}>                    
+                {!!this.props.connector && !!this.props.connector.connected ? (
+                <>
+                    <TouchableOpacity style={styles.touchText} onPress={this.disconnectWallet}>
+                        <Text style={styles.textView}>Kill Session</Text>
+                    </TouchableOpacity>
+                </>
+                ): (                  
+                    <TouchableOpacity style={styles.touchText} onPress={this.connectWallet}>
+                        <Text style={styles.textView}>Connect a Wallet</Text>
+                    </TouchableOpacity>
+                )}
       
-            {!this.state.userExists ? (!this.state.creatingUser ? (
+                {!this.state.userExists ? (!this.state.creatingUser ? (
                     <SignUpForm
                     web3={this.props.web3}
                     contract={this.props.contract}
                     createUser={this.createUser}
                     />) : (<ActivityIndicator/>)) : (                  
                 <TouchableWithoutFeedback
-                        onPress={ () => { this.props.navigation.navigate('HomePage')}}
+                    style={styles.loginMessage}
+                        onPress={ () => { this.props.navigation.navigate('Explore')}}
                 >
                     <Text style={styles.title}>INSTANT LOGIN as {this.state.userDetails.name}</Text>
-            </TouchableWithoutFeedback>
+                </TouchableWithoutFeedback>
             )}
           </View>
         );
@@ -106,13 +104,25 @@ export default class LoginPage extends React.Component<any, any>{
 const styles = StyleSheet.create({
     container:{
         flex: 1,
-        backgroundColor: '#f4f4f4',
-        alignItems:'center'
+        alignItems:'center',
+        backgroundColor: 'red'
     },
     title: {
         paddingBottom: 10,
         fontFamily: 'OpenSans',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        fontSize: 18
+    },
+    textView: {
+        fontSize: 18
+    },
+    touchText: {
+        // marginTop: Dimensions.get('window').height /8,
+        alignItems: 'center',
+    },
+    loginMessage:{
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     input: {
         height: 40,
@@ -127,7 +137,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         paddingTop: 20
     },
-    center: { alignItems: 'center', justifyContent: 'center' },
+    center: { justifyContent: 'center' },
     // eslint-disable-next-line react-native/no-color-literals
     white: { backgroundColor: 'white' }
 });

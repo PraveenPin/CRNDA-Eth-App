@@ -10,4 +10,5 @@ export default {
     password: {
       required: {value: true, message: 'Password is required'},
     },
+    postContent: {required: {value: true, message: 'Cannot be empty'}},
   };

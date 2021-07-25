@@ -94,9 +94,9 @@ function App(): JSX.Element {
                       />)}
         </Stack.Screen>
         <Stack.Screen 
-          name="HomePage"
+          name="CreatePage"
           options={{
-            header: (props) => <Header {...props} headerDisplay="Home"/>
+            header: (props) => <Header {...props} headerDisplay="Share a post"/>
           }}
         >
           {props => <HomePage 
@@ -188,7 +188,7 @@ function App(): JSX.Element {
                   />}
         </Stack.Screen>
       </Stack.Navigator>
-      <Footer/>
+      <Footer navRef={navigationRef} />
     </NavigationContainer>
   );
   

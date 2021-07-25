@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#c0cbd3',
+    color: '#292928',
   },
   textError: {
     color: '#fc6d47',

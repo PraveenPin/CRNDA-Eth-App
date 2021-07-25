@@ -112,42 +112,39 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
 
     return (
         <View style={styles.container}>
-            {/* <TouchableOpacity
-                style={styles.button}
-                onPress={() => navigation.goBack()}
-            >
-                <Text style={styles.buttonText}>Go Back</Text>
-            </TouchableOpacity> */}
             {isLoading ? <PacmanIndicator color="black"/> :
             (<ScrollView>
-                <Text>{post.authorName} : {post.authorId}</Text>
-                <Image style={{ width: 30, height: 30 }}
-                    source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
-                />
-                <Image
+                <View style={styles.topBar}>
+                    <Image style={{ width: 30, height: 30 }}
+                        source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
+                    />
+                    <Text style={{ fontWeight: 'bold', fontSize: 14 }}>{post.authorName} : {post.authorId}</Text>
+                </View>
+               {!!(post.picIpfsHash) && ( <Image
                     style={styles.thumbNail}
                     source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(post.picIpfsHash)}` }}
-                />
+                />)}
                 <Text style={styles.title}>{post.content}</Text>
                 <Text style={styles.description}>{post.url}</Text>
                 <Text style={styles.description}>TIPS: {web3.utils.fromWei(post.tipAmount.toString(), 'Ether')} ETH</Text>
-                <Text style={styles.description}>Donate Ether - </Text>
-                <TextInput style={styles.input}
-                    onChangeText={ val => {
-                        const regex = new RegExp(/^[0-9]*\.?[0-9]*$/);
-                        if(regex.test(val)){
-                            setTip(web3.utils.toWei(val, 'Ether'));
-                        }
-                        setTempTip(val);
-                    }}
-                    value={tempTip}
-                />
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => tipAPost(post.authorId,Number.parseFloat(tip))}
-                >
-                    <Text style={styles.buttonText}>Tip Author</Text>
-                </TouchableOpacity>
+                <View style={styles.inputBox}>
+                    <TextInput style={styles.input}
+                        onChangeText={ val => {
+                            const regex = new RegExp(/^[0-9]*\.?[0-9]*$/);
+                            if(regex.test(val)){
+                                setTip(web3.utils.toWei(val, 'Ether'));
+                            }
+                            setTempTip(val);
+                        }}
+                        value={tempTip}
+                    />
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => tipAPost(post.authorId,Number.parseFloat(tip))}
+                    >
+                        <Text style={styles.buttonText}>Tip Author</Text>
+                    </TouchableOpacity>
+                </View>
                 {(followingIdStringList.length > 0 && followingIdStringList.indexOf(post.authorId.toString()) > -1) ?
                 (<TouchableOpacity
                     style={styles.button}
@@ -183,7 +180,8 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff',
         alignItems: 'center',
-        marginBottom: 100
+        marginBottom: 60,
+        marginTop: 12
     },
     button: {
         padding: 20,
@@ -197,8 +195,9 @@ const styles = StyleSheet.create({
         paddingBottom: 15
     },
     thumbNail: {
-        height: 260,
-        width: '100%'
+        height: 240,
+        width: '100%',
+        marginTop: 8
     },
     productText:{
         alignItems: 'flex-start',
@@ -206,23 +205,34 @@ const styles = StyleSheet.create({
         flex: 1
     },
     title:{
-        fontWeight: 'bold',
         paddingBottom: 10,
-        fontFamily: 'OpenSans'
+        fontFamily: 'OpenSans',
+        fontSize: 20
     },
-    input: {
-        height: 40,
-        width: 250,
+    inputBox: {
         borderColor: 'black',
         borderWidth: 1,
-        fontSize: 26,
-        fontFamily: 'OpenSans',
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent:'space-between',
+        marginTop: 4,
+        alignItems: 'center'
     },
-    productImage: {
-        height: 250,
-        width: '100%'
+    input: {
+        height: 50,
+        width: 150,
+        fontSize: 26,
+        padding: 12,
+        fontFamily: 'OpenSans',
     },
     description: {
         paddingTop: 10
+    },
+    topBar: {
+        display:'flex',
+        justifyContent: 'space-between',
+        flexDirection: 'row',
+        alignItems: 'center'
     }
 });

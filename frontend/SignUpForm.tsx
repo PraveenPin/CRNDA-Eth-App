@@ -27,8 +27,6 @@ export default function SignUpForm ({ web3, contract, createUser }): JSX.Element
         <View style={styles.formContainer}>
           <Form {...{ register, setValue, validation, errors }}>
             <Input name="name" label="Name " />
-            {/* <Input name="email" label="Email" />
-            <Input name="password" label="Password" secureTextEntry={true} /> */}
             <Button title="Submit" onPress={handleSubmit(onSubmit)} />
           </Form>
         </View>
