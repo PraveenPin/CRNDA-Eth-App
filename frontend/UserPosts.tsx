@@ -52,6 +52,7 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
 
     const getUserPosts = async (id) => {
         const userPosts = await contract.methods.getMyPosts(id).call({from: userAddress});
+        console.log("User posts:",id, userPosts);
         setUserPosts(userPosts[1]);
     }
 
@@ -70,22 +71,22 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
             <TouchableWithoutFeedback
                 onPress={ () => navigation.navigate('PostDetail', { myPost: item, postId: item.pid })}
             >
-                <View>
-                    <Text>{item.authorName} : {item.authorId}</Text>
-                    <Image style={{ width: 30, height: 30 }}
-                     source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
-                    />
-                    <View>
-                        <Image
-                            style={styles.thumbNail}
-                            source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(item.picIpfsHash)}` }}
-                        />
-                    </View>
+                <View style={styles.products}>
                     <View style={styles.productText}>
+                        <Image style={{ width: 30, height: 30 }}
+                         source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
+                        />
+                        <Text>{item.authorName} : {item.authorId}</Text>
                         <Text style={styles.title}>{item.content}</Text>
                         <Text style={styles.description}>{item.url}</Text>
                         <Text style={styles.description}>TIPS: {web3.utils.fromWei(item.tipAmount.toString(), 'Ether')} ETH</Text>
                     </View>
+                    {!!item.picIpfsHash && (<View style={styles.productImage}>
+                        <Image
+                            style={styles.thumbNail}
+                            source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(item.picIpfsHash)}` }}
+                        />
+                    </View>)}
                 </View>
             </TouchableWithoutFeedback>
         );
@@ -97,20 +98,28 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
         <View style={styles.container}>
             {!!userFullDetails ? (
                 
-            <ScrollView>
-                <Text>{userFullDetails.name}</Text>
-                <Text>Id: {userFullDetails.id}</Text>
+            <ScrollView style={styles.scrollContainer}>
+                <Text style={styles.userName}>{userFullDetails.name}</Text>
+                {/* <Text style={styles.userId}>Id: {userFullDetails.id}</Text> */}
                 {/* <Text>Coin Balance: {accBalance} ETH</Text> */}
-                <Text>Followers: {userFullDetails.followersCount}</Text>
-                <Text>Following: {userFullDetails.followingCount}</Text>
+                <View style={styles.followContainer}>
+                    <View style={styles.followBlock}>
+                        <Text style={styles.followHeader}>Followers:</Text>
+                        <Text style={styles.followText}> {userFullDetails.followersCount}</Text>
+                    </View>
+                    <View style={styles.followBlock}>
+                        <Text style={styles.followHeader}>Following:</Text>                        
+                        <Text style={styles.followText}> {userFullDetails.followingCount}</Text>
+                    </View>
+                </View>
                 {/* <Text>Tips: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text> */}
                 {/* <Text>Tip Obtained: {web3.utils.fromWei(userFullDetails.tipObtained.toString(), 'Ether')} ETH</Text> */}
                 {/* <Text>Tip Donated: {web3.utils.fromWei(userFullDetails.tipDonated.toString(), 'Ether')} ETH</Text> */}
-                {isLoading ? <AppLoading/> : 
+                {isLoading ? <PacmanIndicator /> : 
                 (
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => navigation.navigate('MyNetwork', { 
+                        onPress={() => navigation.navigate('MyNetwork', {
                             followerIds: myFollowerIds,
                             followingIds: myFollowingIds,
                             followingIdStringList: followingIdStringList,                            
@@ -119,11 +128,14 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
                         <Text style={styles.label}>View their network</Text>
                     </TouchableOpacity>
                 )}
-                <FlatList
-                    data={userPosts}
-                    renderItem={postItem}
-                    keyExtractor={(item) => item.modelNumber}
-                />
+                <View style={styles.postsContainer}>
+                    <Text style={styles.postsHeader}>{userPosts.length > 0 ? 'Posts :' : 'No Posts Yet'}</Text>                
+                    <FlatList
+                        data={userPosts}
+                        renderItem={postItem}
+                        keyExtractor={(item) => item.modelNumber}
+                    />
+                </View>
             </ScrollView>
             ) : (<PacmanIndicator color="black"/>)}
         </View>
@@ -137,7 +149,7 @@ const styles = StyleSheet.create({
         paddingRight: 20,
         backgroundColor:  '#fff',
         alignItems: 'flex-start',
-        justifyContent: 'flex-start'
+        justifyContent: 'flex-start',
     },
     input: {
         height: 40,
@@ -150,46 +162,88 @@ const styles = StyleSheet.create({
     label: {
         fontFamily: 'OpenSans',
         fontSize: 18,
-        paddingTop: 20
-    },
-    req: {
-        paddingTop: 10,
-        fontStyle: 'italic',
-        fontFamily: 'OpenSans'
-    },
-    mutli:{
-        borderColor: 'black',
-        borderWidth: 1,
-        fontSize: 16,
-        fontFamily: 'OpenSans',
-        width: 300
+        padding: 16,
+        color: 'white'
     },
     button:{
         marginRight: 'auto',
         marginLeft: 'auto',
-        paddingTop: 10
+        marginTop: 12,
+        width: '100%',
+        backgroundColor: '#403e3e',
+        alignItems: 'center',
+    },
+    products: {
+        flexDirection: 'row',
+        padding: 12,
+        borderBottomColor: 'black',
+        borderBottomWidth: 1,
+        fontSize: 26,
+        justifyContent: 'center',
+        width: '100%'
+    },
+    productImage: {
+        flex: 1,
+        width: '45%'
     },
     thumbNail: {
-        height: 260,
-        width: '100%'
+        height: 200,
+        width: 180
     },
     productText:{
         alignItems: 'flex-start',
-        paddingLeft:15,
-        flex: 1
+        flex: 1,
+        width: '55%'
     },
     title:{
-        fontWeight: 'bold',
+        marginTop: 8,
         paddingBottom: 10,
-        fontFamily: 'OpenSans'
+        fontFamily: 'OpenSans',
+        fontSize: 18
     },
     description:{
         textAlign: 'left',
-        fontSize: 12,
+        fontSize: 14,
+        marginTop: 8,
         fontFamily: 'OpenSans'
     },
-    status:{
-        paddingTop: 10,
-        paddingBottom: 15
+    scrollContainer: { width: '100%'},
+    userName: {
+        fontSize: 32,
+        fontWeight: 'bold'
+    },
+    userId: {
+        marginTop: 8,
+        fontSize: 22
+    },
+    followContainer: {
+        marginTop: 8,
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+    },
+    followBlock: {
+        display: 'flex',
+        flexDirection: 'row',
+        width: '50%',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    followHeader: {
+        fontSize: 18,
+        color: '#403e3e'
+    },
+    followText: {
+        width: '50%',
+        // padding: 8,
+        fontSize: 22,
+    },
+    postsContainer: {
+        backgroundColor: '#fafafa'
+    },
+    postsHeader: {
+        marginTop: 8,
+        fontSize: 28,
+        fontWeight: 'bold'
     }
 });

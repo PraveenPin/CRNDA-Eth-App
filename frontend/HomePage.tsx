@@ -157,7 +157,7 @@ export default function HomePage({ route, navigation, userAddress, contract }): 
           <Text style={styles.sideText}>
             Image Preview:
           </Text>
-          {image && <Image ref={register} source={{uri: image}} style={{ width: 180 }} />}
+          {image && <Image ref={register} source={{uri: image}} style={{ width: 140, height: 140 }} />}
         </View>
     </View>
   );

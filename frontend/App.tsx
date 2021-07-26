@@ -164,7 +164,7 @@ function App(): JSX.Element {
         <Stack.Screen 
           name="MyNetwork"
           options={{
-            header: (props) => <Header {...props} headerDisplay="Your Network"/>
+            header: (props) => <Header {...props} headerDisplay="View Network"/>
           }}
         >
           {props => <MyNetworkPage 

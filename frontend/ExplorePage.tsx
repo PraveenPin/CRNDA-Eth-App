@@ -114,7 +114,7 @@ export default class ExplorePage extends React.Component<any,{
 
         return(
             <View style={styles.container}>
-                <View>                    
+                <View style={{ marginLeft: 8 }}>                    
                     <MarqueeText
                         style={{ fontSize: 24 }}
                         duration={5000}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     },
     thumbNail: {
         height: 200,
-        width: 110
+        width: 180
     },
     productText:{
         alignItems: 'flex-start',
@@ -213,7 +213,8 @@ const styles = StyleSheet.create({
     },
     searchText:{
         fontSize: 18,
-        height: 40
+        height: 40,
+        width: '70%'
     },
     button: {
         alignItems:'center',

@@ -107,15 +107,36 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
     
     return(
         <View style={styles.container}>
-            <ScrollView>
-                <Text>{userDetails.name}</Text>
-                <Text>Id: {userDetails.id}</Text>
-                <Text>Coin Balance: {accBalance} ETH</Text>
-                <Text>Followers: {userDetails.followersCount}</Text>
-                <Text>Following: {userDetails.followingCount}</Text>
-                <Text>Tips: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
-                <Text>Tip Obtained: {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')} ETH</Text>
-                <Text>Tip Donated: {web3.utils.fromWei(userDetails.tipDonated.toString(), 'Ether')} ETH</Text>
+            <ScrollView style={styles.scrollContainer}>
+                <Text style={styles.userName}>{userDetails.name}</Text>
+                <Text style={styles.outerText}>
+                    Id:
+                    <Text style={styles.balance}> {userDetails.id}</Text>
+                </Text>
+                <Text style={styles.outerText}>
+                    Coin Balance: 
+                    <Text style={styles.balance}> {accBalance} ETH</Text>
+                </Text>
+                <View style={styles.followContainer}>
+                    <View style={styles.followBlock}>
+                        <Text style={styles.followHeader}>Followers:</Text>
+                        <Text style={styles.followText}> {userDetails.followersCount}</Text>
+                    </View>
+                    <View style={styles.followBlock}>
+                        <Text style={styles.followHeader}>Following:</Text>                        
+                        <Text style={styles.followText}> {userDetails.followingCount}</Text>
+                    </View>
+                </View>
+                <View style={styles.followContainer}>
+                    <View style={styles.followBlock}>
+                        <Text style={styles.followHeader}>Tip Obtained:</Text>
+                        <Text style={styles.followText}> {web3.utils.fromWei(userDetails.tipObtained.toString(), 'Ether')}</Text>
+                    </View>
+                    <View style={styles.followBlock}>
+                        <Text style={styles.followHeader}>Tip Donated:</Text>                        
+                        <Text style={styles.followText}> {web3.utils.fromWei(userDetails.tipDonated.toString(), 'Ether')}</Text>
+                    </View>
+                </View>
                 {isLoading ? <PacmanIndicator color="black"/> : 
                  (
                     <TouchableOpacity
@@ -128,15 +149,15 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
                     >
                         <Text style={styles.label}>View your network</Text>
                     </TouchableOpacity>
-                )}     
-                <Text>Posts: </Text>
-                <ScrollView>
+                )}                
+                <View>
+                <Text style={styles.postsHeader}>{myPosts.length > 0 ? 'Posts :' : 'No Posts Yet'}</Text>
                     <FlatList
                         data={myPosts}
                         renderItem={postItem}
                         keyExtractor={(item) => item.pid}
                     />
-                </ScrollView>
+                </View>
             </ScrollView>
         </View>
     );
@@ -149,7 +170,7 @@ const styles = StyleSheet.create({
         paddingRight: 20,
         backgroundColor:  '#fff',
         alignItems: 'flex-start',
-        justifyContent: 'flex-start'
+        justifyContent: 'flex-start',
     },
     input: {
         height: 40,
@@ -162,24 +183,59 @@ const styles = StyleSheet.create({
     label: {
         fontFamily: 'OpenSans',
         fontSize: 18,
-        paddingTop: 20
-    },
-    req: {
-        paddingTop: 10,
-        fontStyle: 'italic',
-        fontFamily: 'OpenSans'
-    },
-    mutli:{
-        borderColor: 'black',
-        borderWidth: 1,
-        fontSize: 16,
-        fontFamily: 'OpenSans',
-        width: 300
+        padding: 16,
+        color: 'white'
     },
     button:{
         marginRight: 'auto',
         marginLeft: 'auto',
-        paddingTop: 10
+        marginTop: 12,
+        width: '100%',
+        backgroundColor: '#403e3e',
+        alignItems: 'center',
+    },
+    scrollContainer: { width: '100%'},
+    userName: {
+        fontSize: 32,
+        fontWeight: 'bold'
+    },
+    outerText: {
+        marginTop: 8,
+        fontSize: 18,
+        color: '#403e3e'
+    },    
+    innerText: {       
+        fontSize: 20
+    },
+    balance: {
+        marginTop: 8,
+        fontSize: 22,
+        color: '#212121'   
+    },
+    followContainer: {
+        marginTop: 8,
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+    },
+    followBlock: {
+        display: 'flex',
+        flexDirection: 'row',
+        width: '50%',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    followHeader: {
+        fontSize: 18,
+        color: '#403e3e'
+    },
+    followText: {
+        width: '50%',
+        // padding: 8,
+        fontSize: 22,
+    },
+    postsContainer: {
+        backgroundColor: '#fafafa'
     },
     status:{
         paddingTop: 10,
@@ -204,4 +260,9 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontFamily: 'OpenSans'
     },
+    postsHeader: {
+        marginTop: 8,
+        fontSize: 28,
+        fontWeight: 'bold'
+    }
 });

@@ -33,17 +33,17 @@ export default function SignUpForm ({ web3, contract, createUser }): JSX.Element
     );
 };
   
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'center',
-      backgroundColor: '#181e34',
-    },
-    formContainer: {
-      padding: 8,
-      flex: 1,
-    },
-    button: {
-      backgroundColor: 'red',
-    }
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#181e34',
+  },
+  formContainer: {
+    padding: 8,
+    flex: 1,
+  },
+  button: {
+    backgroundColor: 'red',
+  }
+});

@@ -7,6 +7,9 @@ import {
 } from 'react-native-indicators';
 import Identicon from 'identicon.js';
 import Comment from './Comment';
+import CommentIcon from '../assets/image/comments.png';
+import FollowIcon from '../assets/image/follow.png';
+import UnFollowIcon from '../assets/image/unfollow.png';
 
 export default function PostDetail({ userAddress, contract, web3, route, navigation }){
     const { myPost, postId } = route.params;
@@ -36,17 +39,17 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
             setPost(post);
         }
         contract.methods.getAllFollowingIds().call({from: userAddress})
-            .then((result) => {
-                setMyFollowing(result[0]);
-                setMyFollowers(result[1]);
-            });
-            
-            let followingIdStringList = [];
-            myFollowingIds.map((idBN) => {
-              followingIdStringList.push(idBN.toString());
-            });
-            setFollowingIdStringList(followingIdStringList);
-            setIsLoading(false);
+        .then((result) => {
+            setMyFollowing(result[0]);
+            setMyFollowers(result[1]);
+        });
+        
+        let followingIdStringList = [];
+        myFollowingIds.map((idBN) => {
+            followingIdStringList.push(idBN.toString());
+        });
+        setFollowingIdStringList(followingIdStringList);
+        setIsLoading(false);
     }
 
     const followAuthor = async (authorId) => {
@@ -71,7 +74,9 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
         //notification for following
     }
 
-    const tipAPost = async (id, tipAmount) => {      
+    const tipAPost = async (id, tipAmount) => {     
+        console.log("Tipping ......!",id, "amount:", tipAmount) ;
+        
         setIsLoading(true);
         const TRANSFER_GAS_ESTIMATION = await contract.methods.tipAPost(id).estimateGas({ from : userAddress, value: tipAmount});
         console.log("Gas for tipping author",TRANSFER_GAS_ESTIMATION);
@@ -100,7 +105,7 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
   }
 
   const addCommentToPost = async (postId, comment) => {
-      console.log("aklsjdlaksjdl", postId, comment);
+    console.log("aklsjdlaksjdl", postId, comment);
     const TRANSFER_GAS_ESTIMATION = await contract.methods.createComment(postId, comment).estimateGas({ from: userAddress });
     console.log("Gas for creating a comment",TRANSFER_GAS_ESTIMATION);
     
@@ -113,12 +118,12 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     return (
         <View style={styles.container}>
             {isLoading ? <PacmanIndicator color="black"/> :
-            (<ScrollView>
+            (<ScrollView style={{ width: '100%', padding: 8}}>
                 <View style={styles.topBar}>
                     <Image style={{ width: 30, height: 30 }}
                         source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
                     />
-                    <Text style={{ fontWeight: 'bold', fontSize: 14 }}>{post.authorName} : {post.authorId}</Text>
+                    <Text style={{ fontWeight: 'bold', fontSize: 14, paddingRight: 4 }}>{post.authorName} : {post.authorId}</Text>
                 </View>
                {!!(post.picIpfsHash) && ( <Image
                     style={styles.thumbNail}
@@ -129,15 +134,16 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
                 <Text style={styles.description}>TIPS: {web3.utils.fromWei(post.tipAmount.toString(), 'Ether')} ETH</Text>
                 <View style={styles.inputBox}>
                     <TextInput style={styles.input}
+                        keyboardType='numeric'
                         onChangeText={ val => {
                             const regex = new RegExp(/^[0-9]*\.?[0-9]*$/);
-                            if(regex.test(val)){
+                            if(val.length !== 0 && regex.test(val)){
                                 setTip(web3.utils.toWei(val, 'Ether'));
                             }
                             setTempTip(val);
                         }}
                         value={tempTip}
-                    />
+                    />   
                     <TouchableOpacity
                         style={styles.button}
                         onPress={() => tipAPost(post.authorId,Number.parseFloat(tip))}
@@ -145,31 +151,45 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
                         <Text style={styles.buttonText}>Tip Author</Text>
                     </TouchableOpacity>
                 </View>
-                {(followingIdStringList.length > 0 && followingIdStringList.indexOf(post.authorId.toString()) > -1) ?
-                (<TouchableOpacity
-                    style={styles.button}
-                    onPress={() => unFollowAuthor(post.authorId)}
+                
+                <View style={styles.attachContainer}>             
+                    {(followingIdStringList.length > 0 && followingIdStringList.indexOf(post.authorId.toString()) > -1) ?
+                    (<TouchableOpacity
+                        style={styles.iconText}
+                        onPress={() => unFollowAuthor(post.authorId)}
                     >
-                        <Text style={styles.buttonText}>Unfollow Author</Text>
+                        <Text style={styles.textInTouch}> Unfollow </Text>
+                        <Image source={UnFollowIcon} style={styles.iconStyle}/>
                     </TouchableOpacity>)
-                :(userAddress.localeCompare(post.author) !== 0 && (<TouchableOpacity
-                    style={styles.button}
-                    onPress={() => followAuthor(post.authorId)}
-                >
-                    <Text style={styles.buttonText}>Follow Author</Text>
-                </TouchableOpacity>))}
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => openCommentsBox(post.pid)}
+                    :(userAddress.localeCompare(post.author) !== 0 && (<TouchableOpacity
+                        style={styles.iconText}
+                        onPress={() => followAuthor(post.authorId)}
                     >
-                        <Text style={styles.buttonText}>Show Comments</Text>
-                    </TouchableOpacity>
+                        <Text style={styles.textInTouch}> Follow </Text>
+                        <Image source={FollowIcon} style={styles.iconStyle}/>
+                    </TouchableOpacity>))}
+                    {!showCommentBox ?
+                    (<TouchableOpacity
+                            style={styles.iconText}
+                            onPress={() => openCommentsBox(post.pid)}
+                        >
+                            <Image source={CommentIcon} style={styles.iconStyle}/>
+                            <Text style={styles.textInTouch}> Comments </Text>
+                        </TouchableOpacity>)
+                    :(  <TouchableOpacity
+                            style={styles.iconText}
+                            onPress={() => closeCommentsBox()}
+                        >
+                            <Image source={CommentIcon} style={styles.iconStyle}/>
+                            <Text style={[styles.textInTouch, { color: 'red' }]}>   Close   </Text>
+                        </TouchableOpacity>)}
+                </View>
                 {showCommentBox && <Comment
                                      postComments={postComments}
                                      postData={post} 
                                      addComment={addCommentToPost} 
                                      navigation={navigation}
-                                     closeCommentsBox={closeCommentsBox}
+                                    //  closeCommentsBox={closeCommentsBox}
                                     />}
             </ScrollView>)}
         </View>
@@ -180,11 +200,12 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff',
         alignItems: 'center',
-        marginBottom: 60,
-        marginTop: 12
+        marginTop: 12,
+        width: '100%'
     },
     button: {
         padding: 20,
+        width: '33%'
     },
     buttonText:{
         fontFamily: 'OpenSans',
@@ -207,21 +228,23 @@ const styles = StyleSheet.create({
     title:{
         paddingBottom: 10,
         fontFamily: 'OpenSans',
-        fontSize: 20
+        fontSize: 20,
+        marginTop: 8,
     },
     inputBox: {
         borderColor: 'black',
         borderWidth: 1,
-        borderRadius: 2,
+        borderRadius: 5,
         display: 'flex',
         flexDirection: 'row',
         justifyContent:'space-between',
-        marginTop: 4,
-        alignItems: 'center'
+        marginTop: 8,
+        alignItems: 'center',
+        width: '100%'
     },
     input: {
         height: 50,
-        width: 150,
+        width: '67%',
         fontSize: 26,
         padding: 12,
         fontFamily: 'OpenSans',
@@ -234,5 +257,30 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         flexDirection: 'row',
         alignItems: 'center'
-    }
+    },
+    attachContainer: { 
+      display: 'flex',
+      justifyContent: 'center', 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      width: '100%',
+    //   padding: 4
+    },
+    iconText: {
+      display: 'flex',
+      flexDirection: 'row', 
+      justifyContent: 'space-evenly', 
+      height: 50, 
+      alignItems: 'center',
+      width: '48%',
+      borderColor: 'black',
+      borderRadius: 5,
+      borderWidth: 1,
+      margin: 4
+    },
+    textInTouch:{
+      fontSize: 16,
+      color: '#007AFF'
+    },
+    iconStyle: { width: 36, height: 36 },
 });

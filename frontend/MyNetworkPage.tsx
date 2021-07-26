@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, FlatList, TouchableWithoutFeedback } from 'react-native';
-import AppLoading from 'expo-app-loading';
+import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, FlatList, TouchableWithoutFeedback } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import DownArrow from '../assets/image/downArrow.png';
+import UpArrow from '../assets/image/upArrow.png';
 
 function HomeScreen() {
     return (
@@ -31,7 +32,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
             userExtraInfo: {},
             followerIds: this.props.route.params.followerIds,
             followingIds: this.props.route.params.followingIds,
-            selectedId: null        
+            selectedId: null
         }
     }
 
@@ -59,10 +60,10 @@ export default class MyNetworkPage extends React.Component<any, any>{
     this.setState({ isLoading: true });
     let totalFollowersData = [];
     for(let i = 0; i<this.state.followerIds.length;i++){
-      console.log("Fetching followers data 11111111",totalFollowersData);
       let userInfo = await this.props.contract.methods.getUserData(this.state.followerIds[i]).call({from: this.props.userAddress});
       totalFollowersData = [...totalFollowersData, userInfo];
     }
+    console.log("Fetching followers data 11111111",totalFollowersData);
     this.setState({ followersData : totalFollowersData, isLoading: false });
   }
 
@@ -73,6 +74,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
       let userInfo = await this.props.contract.methods.getUserData(this.state.followingIds[i]).call({from: this.props.userAddress});
       totalFollowingData = [...totalFollowingData, userInfo];
     }
+    console.log("Fetching following data 11111111",totalFollowingData);
     this.setState({ followingData : totalFollowingData, isLoading: false });
   }
 
@@ -118,21 +120,41 @@ export default class MyNetworkPage extends React.Component<any, any>{
                     onPress={ () => this.expandMenu(itemId)}
                 >                    
                     <View>
-                        <Text>{item[1]}</Text>
-                        <Text>Id: {itemId}</Text>
-                        <Text>Followers: {item[2]}</Text>
-                        <Text>Following: {item[3]}</Text>
+                        <View style={styles.nameIcon}>
+                            <Text style={styles.userName}>{item[1]}</Text>
+                            <Image style={styles.expandIcon} source={expandMenu ? UpArrow : DownArrow}/>
+                        </View>
+                        <View style={styles.followContainer}>
+                            <View style={styles.followBlock}>
+                                <Text style={styles.followHeader}>Followers:</Text>
+                                <Text style={styles.followText}> {item[2]}</Text>
+                            </View>
+                            <View style={styles.followBlock}>
+                                <Text style={styles.followHeader}>Following:</Text>                        
+                                <Text style={styles.followText}> {item[3]}</Text>
+                            </View>
+                        </View>
                         {expandMenu && (
                             <View>
-                                <Text>Tip Obtained: {this.props.web3.utils.fromWei(item[4].toString(), 'Ether')} ETH</Text>
-                                <Text>Tip Donated: {this.props.web3.utils.fromWei(item[5].toString(), 'Ether')} ETH</Text>
-                                <TouchableWithoutFeedback
-                                    onPress={() => this.props.navigation.navigate('UserPosts', {
-                                        userId: item[0]
-                                    })}
-                                >
-                                    <Text>Open Profile</Text>
-                                </TouchableWithoutFeedback>
+                                <View style={styles.followContainer}>
+                                    <View style={styles.followBlock}>
+                                        <Text style={styles.followHeader}>Tip Obtained:</Text>
+                                        <Text style={styles.followText}> {this.props.web3.utils.fromWei(item[4].toString(), 'Ether')}</Text>
+                                    </View>
+                                    <View style={styles.followBlock}>
+                                        <Text style={styles.followHeader}>Tip Donated:</Text>                        
+                                        <Text style={styles.followText}> {this.props.web3.utils.fromWei(item[5].toString(), 'Ether')}</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.touchContainer}>
+                                    <TouchableWithoutFeedback
+                                        onPress={() => this.props.navigation.navigate('UserPosts', {
+                                            userId: item[0]
+                                        })}
+                                    >
+                                        <Text style={styles.label}>Open Profile</Text>
+                                    </TouchableWithoutFeedback>
+                                </View>
                             </View>
                         )}
                     </View> 
@@ -140,29 +162,42 @@ export default class MyNetworkPage extends React.Component<any, any>{
             );
         };
 
+        const isActiveTabFollowers = this.state.activeTab === 'Followers';
+        const followersTabHeaderStyles = {
+           fontSize: isActiveTabFollowers ? 24 : 18,
+           fontWeight: isActiveTabFollowers ? 'bold': 'normal',
+        }
+        const followingTabHeaderStyles = {
+           fontSize: !isActiveTabFollowers ? 24 : 18,
+           fontWeight: !isActiveTabFollowers ? 'bold': 'normal'
+        }
+
         return(
-            <View style={styles.tabs}>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => this.setSwitch(0)}
-                >
-                    <Text>Followers List</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => this.setSwitch(1)}
-                >
-                    <Text>Following List</Text>
-                </TouchableOpacity>
-                <Text>{this.state.activeTab} List</Text>                
-                <ScrollView>
-                    <FlatList
-                        data={this.state.switch === 0 ? this.state.followersData : this.state.followingData }
-                        renderItem={abbrevatedInfo}
-                        keyExtractor={(item) => item.id}
-                        extraData={this.state.selectedId}
-                    />
-                </ScrollView>
+            <View style={styles.container}>
+                <View style={styles.tabContainer}>                    
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => this.setSwitch(0)}
+                    >
+                        <Text style={[followersTabHeaderStyles]}>Followers List</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => this.setSwitch(1)}
+                    >
+                        <Text style={[followingTabHeaderStyles]}>Following List</Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.listContainer}>              
+                    <ScrollView>
+                        <FlatList
+                            data={this.state.switch === 0 ? this.state.followersData : this.state.followingData }
+                            renderItem={abbrevatedInfo}
+                            keyExtractor={(item) => item.id}
+                            extraData={this.state.selectedId}
+                        />
+                    </ScrollView>
+                </View>
             </View>
 
         );
@@ -170,18 +205,85 @@ export default class MyNetworkPage extends React.Component<any, any>{
 }
 
 const styles = StyleSheet.create({
-    tabs:{
-        display: 'flex',
+    container:{
         width: '100%',
-        height: 50,
+    },
+    tabContainer: {
+        width: '100%',
+        display: 'flex',
         flexDirection: 'row',
         alignItems: 'flex-start',
-        justifyContent: 'center',
-        backgroundColor: '#f4f4f4'
+        justifyContent: 'space-evenly',
+        backgroundColor: '#f4f4f4',
+        borderBottomWidth: 1
     },
     button:{
-        padding: 15
-    }
+        alignItems: 'center',
+        width: '50%',
+        marginBottom: 12
+    },
+    listContainer: {
+        width: '100%',
+        padding: 8,
+        backgroundColor : '#d9d9d9',
+        shadowColor: 'grey',
+        shadowOpacity: 0.5,
+        shadowRadius : 5
+    },
+    tabHeader: {
+        fontSize: 22,
+
+    },
+    followContainer: {
+        marginTop: 12,
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+    },
+    followBlock: {
+        display: 'flex',
+        flexDirection: 'row',
+        width: '50%',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    followHeader: {
+        fontSize: 18,
+        color: '#403e3e'
+    },
+    followText: {
+        width: '50%',
+        // padding: 8,
+        fontSize: 22,
+    },
+    nameIcon: {
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+    },
+    userName: {        
+        fontSize: 26,
+        fontWeight: 'bold'
+    },
+    expandIcon:{
+        width: 24, height: 24,
+    },
+    touchContainer: {
+        marginRight: 'auto',
+        marginLeft: 'auto',
+        marginTop: 12,
+        width: '100%',
+        backgroundColor: '#403e3e',
+        alignItems: 'center',
+    },
+    label: {
+        fontFamily: 'OpenSans',
+        fontSize: 18,
+        padding: 16,
+        color: 'white'
+    },
 });
 
 
