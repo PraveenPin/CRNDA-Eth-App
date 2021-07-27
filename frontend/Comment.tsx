@@ -8,7 +8,6 @@ export default function Comment({ postComments, addComment, navigation, postData
     const [newComment, setNewComment] = useState('');
 
     const addNewComment = () => {
-        console.log("new comment", newComment, newComment.length);
         if(newComment.length > 0){
             addComment(postData.pid, newComment);
             setNewComment('');

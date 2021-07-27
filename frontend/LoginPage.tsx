@@ -3,7 +3,6 @@ import { Dimensions, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 import Web3 from 'web3';
 import SocialNetwork from '../abis/SocialNetwork.json';
-import globalCatalog from './CatalogDB';
 import { navigationRef } from './RootNavigation';
 import UserDetails from './DataTypes';
 import HomePage from './HomePage';
@@ -58,7 +57,7 @@ export default class LoginPage extends React.Component<any, any>{
         this.props.connector.killSession();
     }
 
-    createUser = async (userName) => {
+    createUser = async (userName: string) => {
         this.setState({ creatingUser: true });
         const gasEstimate = await this.props.contract.methods.autoCreateUser(userName).estimateGas({ from: this.props.userAddress });
         this.props.contract.methods.autoCreateUser(userName).send({from: this.props.userAddress, gas: gasEstimate})

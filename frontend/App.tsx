@@ -1,11 +1,9 @@
-import { HARDHAT_PORT, HARDHAT_PRIVATE_KEY } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useWalletConnect, withWalletConnect } from '@walletconnect/react-native-dapp';
 import React, { useState, useEffect } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform } from 'react-native';
 import Web3 from 'web3';
-import AppLoading from 'expo-app-loading';
-import { StatusBar } from 'expo-status-bar';
+import { PacmanIndicator } from 'react-native-indicators';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -18,12 +16,11 @@ import NewsDetail from './NewsDetail';
 import About from './About';
 import ProfilePage from './Profile';
 import PostDetail from './PostDetail';
-import ExplorePage from './ExplorePage';
+import Explore from './ExplorePage';
 import LoginPage from './LoginPage';
 import MyNetworkPage from './MyNetworkPage';
 import UserPosts from './UserPosts';
 import SocialNetwork from '../abis/SocialNetwork.json';
-
 
 const GANACHE_PORT:string = "7545";
 const GANACHE_IP_ADDRESS:string = "192.168.0.7";
@@ -69,7 +66,7 @@ function App(): JSX.Element {
 
   if(initialSetup){
     return (
-      <AppLoading/>
+      <PacmanIndicator />
     ); 
   }
 
@@ -130,7 +127,6 @@ function App(): JSX.Element {
                   {...props}
                   userAddress={userAddress}
                   contract={contract}
-                  userDetails={userDetails}
                   web3={web3}
                 />}
 
@@ -138,7 +134,7 @@ function App(): JSX.Element {
         <Stack.Screen 
           name="PostDetail" 
           options={{
-            header: (props) => <Header {...props} headerDisplay="PostDetail"/>
+            header: (props) => <Header {...props} headerDisplay="Post Detail"/>
           }}
         >
         {props => <PostDetail 
@@ -154,7 +150,7 @@ function App(): JSX.Element {
             header: (props) => <Header {...props} headerDisplay="Explore"/>
           }}
         >
-          {props => <ExplorePage 
+          {props => <Explore 
                     {...props}
                     userAddress={userAddress}
                     contract={contract}

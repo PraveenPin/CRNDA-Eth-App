@@ -1,22 +1,20 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View, FlatList, Image, TouchableWithoutFeedback, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import {
-    PacmanIndicator
-  } from 'react-native-indicators';
-  import {getIpfsHashFromBytes32} from './utils/ipfs';
+import { PacmanIndicator } from 'react-native-indicators';
 import Identicon from 'identicon.js';
 import MarqueeText from 'react-native-marquee';
-import SearchIcon from '../assets/image/search.png';
+import { useIsFocused } from '@react-navigation/native';
 
-export default class ExplorePage extends React.Component<any,{
-    initialSetup: boolean,
-    allPosts: Array<any>,
-    headerText: string,
-    searchKeyWord: string,
-    showSearchResults: boolean,
-    searchResults: Array<any>,
-    tickerData: string
-     }>{
+import { ExplorePageState } from './DataTypes';
+import SearchIcon from '../assets/image/search.png';
+import {getIpfsHashFromBytes32} from './utils/ipfs';
+
+export default function Explore (props): JSX.Element {
+    const isFocused = useIsFocused();
+    return <ExplorePage {...props} isFocused={isFocused} />;
+  }
+
+class ExplorePage extends React.Component<any,ExplorePageState>{
     constructor(props){
         super(props);
         this.state={
@@ -35,6 +33,12 @@ export default class ExplorePage extends React.Component<any,{
         this.fetchTickerExchangeData();
     }
 
+    async componentWillReceiveProps(nextProps){
+        if(!this.props.isFocused && nextProps.isFocused){
+            await this.explorePosts();
+            this.fetchTickerExchangeData();
+        }
+    }
     
 
   explorePosts = async () => {
@@ -61,7 +65,7 @@ export default class ExplorePage extends React.Component<any,{
   }
 
 
-    setKeyWordForSearch = (keyWord) => {
+    setKeyWordForSearch = (keyWord: string) => {
         this.setState({ searchKeyWord: keyWord });
     }
 

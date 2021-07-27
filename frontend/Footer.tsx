@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+
 import * as RootNavigation from './RootNavigation';
 import HomeIcon from '../assets/image/home.png';
 import ExploreIcon from '../assets/image/explore.jpg';
@@ -9,7 +10,7 @@ export default function Footer({navRef}): JSX.Element {
     const currentPage = navRef.current?.getCurrentRoute();
 
     const [disabled, setDisabled] = useState(currentPage?.name === 'LoginPage');
-    console.log("In Footer",disabled);
+
     useEffect( () => {
         setDisabled(currentPage?.name === 'LoginPage');
     }, [navRef]);

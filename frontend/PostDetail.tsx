@@ -31,23 +31,19 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     },[isFocused]);
     
 
-    const setup = async (reload = false) => {
+    const setup = async () => {
         setIsLoading(true);
-        if(reload){   
-            const post = await contract.methods.getPostFromPostId(postId).call();
-            console.log("ReFetching post **************************", post);
-            setPost(post);
-        }
-        contract.methods.getAllFollowingIds().call({from: userAddress})
-        .then((result) => {
-            setMyFollowing(result[0]);
-            setMyFollowers(result[1]);
-        });
+        const post = await contract.methods.getPostFromPostId(postId).call();
+        const result = await contract.methods.getAllFollowingIds().call({from: userAddress});  
+        setMyFollowing(result[0]);
+        setMyFollowers(result[1]);
         
         let followingIdStringList = [];
-        myFollowingIds.map((idBN) => {
+        result[0].map((idBN) => {
             followingIdStringList.push(idBN.toString());
         });
+        
+        setPost(post);
         setFollowingIdStringList(followingIdStringList);
         setIsLoading(false);
     }
@@ -55,10 +51,10 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     const followAuthor = async (authorId) => {
         const TRANSFER_GAS_ESTIMATION = await contract.methods.followAuthor(authorId).estimateGas({ from : userAddress });
         console.log("Gas for following author",TRANSFER_GAS_ESTIMATION);
-        contract.methods.followAuthor(authorId).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
+        await contract.methods.followAuthor(authorId).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
         .once('receipt', (receipt) => {
-          console.log("r:",receipt);
-          setup(true);
+            console.log("receipt", receipt);
+          setup();
         });
         //notification for following
     }
@@ -66,10 +62,10 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     const unFollowAuthor = async (authorId) => {
         const TRANSFER_GAS_ESTIMATION = await contract.methods.unFollowAuthor(authorId).estimateGas({ from : userAddress });
         console.log("Gas for unfollowing author",TRANSFER_GAS_ESTIMATION);
-        contract.methods.unFollowAuthor(authorId).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
+        await contract.methods.unFollowAuthor(authorId).send({ from: userAddress, gas: TRANSFER_GAS_ESTIMATION })
         .once('receipt', (receipt) => {
-            console.log("r:",receipt);
-            setup(true);
+            console.log("receipt", receipt);
+            setup();
         });
         //notification for following
     }
@@ -85,7 +81,7 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
             setIsLoading(false);
             setTempTip('');
             setTip('');
-            setup(true);
+            setup();
         });
     }
 
@@ -115,10 +111,15 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
     });
   }
 
+  console.log("Does this guy follow",followingIdStringList,followingIdStringList.indexOf(post.authorId.toString()));
+
+    if(isLoading){
+        return (<PacmanIndicator /> );
+    }
+
     return (
-        <View style={styles.container}>
-            {isLoading ? <PacmanIndicator color="black"/> :
-            (<ScrollView style={{ width: '100%', padding: 8}}>
+        <View style={styles.container}>            
+            <ScrollView style={{ width: '100%', padding: 8}}>
                 <View style={styles.topBar}>
                     <Image style={{ width: 30, height: 30 }}
                         source={{ uri: `data:image/png;base64,${new Identicon(post.author, 30).toString()}`}}
@@ -152,16 +153,16 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
                     </TouchableOpacity>
                 </View>
                 
-                <View style={styles.attachContainer}>             
-                    {(followingIdStringList.length > 0 && followingIdStringList.indexOf(post.authorId.toString()) > -1) ?
+                <View style={styles.attachContainer}>    
+                    {(userAddress.localeCompare(post.author) !== 0) && 
+                    ((followingIdStringList.length > 0 && followingIdStringList.indexOf(post.authorId.toString()) > -1) ?
                     (<TouchableOpacity
                         style={styles.iconText}
                         onPress={() => unFollowAuthor(post.authorId)}
                     >
                         <Text style={styles.textInTouch}> Unfollow </Text>
                         <Image source={UnFollowIcon} style={styles.iconStyle}/>
-                    </TouchableOpacity>)
-                    :(userAddress.localeCompare(post.author) !== 0 && (<TouchableOpacity
+                    </TouchableOpacity>) : (<TouchableOpacity
                         style={styles.iconText}
                         onPress={() => followAuthor(post.authorId)}
                     >
@@ -191,7 +192,7 @@ export default function PostDetail({ userAddress, contract, web3, route, navigat
                                      navigation={navigation}
                                     //  closeCommentsBox={closeCommentsBox}
                                     />}
-            </ScrollView>)}
+            </ScrollView>
         </View>
     );
 }

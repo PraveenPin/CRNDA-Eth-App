@@ -20,7 +20,6 @@ export default function HomePage({ route, navigation, userAddress, contract }): 
 
   const [image, setImage] = React.useState(undefined);
   const [imageFile, setImageFile] = React.useState(undefined);
-  const [hasCameraRollPermission, setCameraRollPermission] = React.useState(false);
   const [isLoading, setLoading] = React.useState(false);
 
   const createAPost = React.useCallback( async (content : string, url : string, imageHash : string ) => {
@@ -148,17 +147,13 @@ export default function HomePage({ route, navigation, userAddress, contract }): 
               <Image source={ClearIcon} style={styles.iconStyle}/>
             </TouchableOpacity>
            </View>
-          {/* <Button title="Pick from Camera roll" onPress={pickImage} />
-          <Button title="Camera" onPress={takePicture} /> */}
-          {/* <Button title="Post" onPress={handleSubmit(onSubmit)} /> */}
-          {/* <Button color="red" title="Clear" onPress={() => reset()} /> */}
         </Form>
-        <View style={{ padding: 4 }}>          
+        {image && (<View style={{ padding: 4 }}>          
           <Text style={styles.sideText}>
             Image Preview:
           </Text>
-          {image && <Image ref={register} source={{uri: image}} style={{ width: 140, height: 140 }} />}
-        </View>
+          <Image ref={register} source={{uri: image}} style={{ width: 140, height: 140 }} />
+        </View>)}
     </View>
   );
 }

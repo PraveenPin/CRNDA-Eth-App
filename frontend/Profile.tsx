@@ -5,11 +5,14 @@ import {
   PacmanIndicator
 } from 'react-native-indicators';
 import Identicon from 'identicon.js';
+
+import UserDetails from './DataTypes';
 import { getIpfsHashFromBytes32 } from './utils/ipfs';
 
-export default function ProfilePage({ web3, contract, userAddress, userDetails, route, navigation }): JSX.Element{
+export default function ProfilePage({ web3, contract, userAddress, route, navigation }): JSX.Element{
      
     const [isLoading, setIsLoading] = useState(true);
+    const [userDetails, setUserDetails] = useState({} as UserDetails);
     const [myPosts, setMyPosts] = useState([]);
     const [accBalance, setAccountBalance] = useState(0.0);
     const [myFollowingIds, setMyFollowingIds] = useState([]);
@@ -17,6 +20,24 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
     const [followingIdStringList, setFollowingIdStringList] = useState([]);
     const isFocused = useIsFocused();
     
+
+    const fetchUserDetails = async () => {
+        const userInfo = await contract.methods.getUserInfo().call({from: userAddress});
+            const userDetails: UserDetails = {
+                id: userInfo[0],
+                name: userInfo[1],
+                followersCount: userInfo[2],
+                followingCount: userInfo[3],
+                tipObtained: userInfo[4],
+                tipDonated: userInfo[5]
+            };
+            setUserDetails(userDetails);
+
+            await fetchMyPosts(userDetails);
+            await fetchMySocialNetworkIds(userDetails);
+            fetchAccountBalance();
+            setIsLoading(false);
+    }
 
     const fetchAccountBalance = () => {
         web3.eth.getBalance(userAddress).then((accountBalance) => {
@@ -26,14 +47,14 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
         });
     }
 
-    const fetchMyPosts = async () => {    
+    const fetchMyPosts = async (userDetails: UserDetails) => {    
         const myPosts = await contract.methods.getMyPosts(userDetails.id).call({from: userAddress});
         setMyPosts(myPosts[1]);
     }
 
-    const fetchMySocialNetworkIds = async () => {
+    const fetchMySocialNetworkIds = async (userDetails: UserDetails) => {
         setIsLoading(true);
-        const result = await contract.methods.getWholeNetworkForAnId(userDetails.id).call({from: userAddress})        
+        const result = await contract.methods.getWholeNetworkForAnId(userDetails.id).call({from: userAddress});
         console.log("Ner",result);
         setMyFollowingIds(result[0]);
         setMyFollowerIds(result[1]);
@@ -69,12 +90,8 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
             .on('error', console.error);
     }
 
-    useEffect( () => {        
-        if(!userDetails || isFocused){
-            fetchMyPosts();
-            fetchMySocialNetworkIds();
-            fetchAccountBalance();
-        }
+    useEffect( () => { 
+        fetchUserDetails();
     }, [isFocused]);
 
     const postItem = ({item}) => {     
@@ -83,26 +100,30 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
         return(
             <TouchableWithoutFeedback
                 onPress={ () => navigation.navigate('PostDetail', { myPost: item, postId: item.pid })}
-            >
-                <View>
-                    <Text>{item.authorName} : {item.authorId}</Text>
-                    <Image style={{ width: 30, height: 30 }}
-                     source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
-                    />
-                    <View>
-                        <Image
-                            style={styles.thumbNail}
-                            source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(item.picIpfsHash)}` }}
-                        />
-                    </View>
+            >                
+                <View style={styles.products}>
                     <View style={styles.productText}>
+                        <Image style={{ width: 30, height: 30 }}
+                         source={{ uri: `data:image/png;base64,${new Identicon(item.author, 30).toString()}`}}
+                        />
+                        <Text>{item.authorName} : {item.authorId}</Text>
                         <Text style={styles.title}>{item.content}</Text>
                         <Text style={styles.description}>{item.url}</Text>
                         <Text style={styles.description}>TIPS: {web3.utils.fromWei(item.tipAmount.toString(), 'Ether')} ETH</Text>
                     </View>
+                    {!!item.picIpfsHash && (<View style={styles.productImage}>
+                        <Image
+                            style={styles.thumbNail}
+                            source={{ uri: `https://ipfs.io/ipfs/${getIpfsHashFromBytes32(item.picIpfsHash)}` }}
+                        />
+                    </View>)}
                 </View>
             </TouchableWithoutFeedback>
         );
+    }
+
+    if(isLoading){
+        return (<PacmanIndicator />);
     }
     
     return(
@@ -136,10 +157,8 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
                         <Text style={styles.followHeader}>Tip Donated:</Text>                        
                         <Text style={styles.followText}> {web3.utils.fromWei(userDetails.tipDonated.toString(), 'Ether')}</Text>
                     </View>
-                </View>
-                {isLoading ? <PacmanIndicator color="black"/> : 
-                 (
-                    <TouchableOpacity
+                </View>                
+                <TouchableOpacity
                         style={styles.button}
                         onPress={() => navigation.navigate('MyNetwork', { 
                             followerIds: myFollowerIds,
@@ -148,8 +167,7 @@ export default function ProfilePage({ web3, contract, userAddress, userDetails, 
                          })}
                     >
                         <Text style={styles.label}>View your network</Text>
-                    </TouchableOpacity>
-                )}                
+                </TouchableOpacity>               
                 <View>
                 <Text style={styles.postsHeader}>{myPosts.length > 0 ? 'Posts :' : 'No Posts Yet'}</Text>
                     <FlatList
@@ -193,6 +211,28 @@ const styles = StyleSheet.create({
         width: '100%',
         backgroundColor: '#403e3e',
         alignItems: 'center',
+    },
+    products: {
+        flexDirection: 'row',
+        padding: 12,
+        borderBottomColor: 'black',
+        borderBottomWidth: 1,
+        fontSize: 26,
+        justifyContent: 'center',
+        width: '100%'
+    },
+    productImage: {
+        flex: 1,
+        width: '45%'
+    },
+    thumbNail: {
+        height: 200,
+        width: 180
+    },
+    productText:{
+        alignItems: 'flex-start',
+        flex: 1,
+        width: '55%'
     },
     scrollContainer: { width: '100%'},
     userName: {
@@ -240,15 +280,6 @@ const styles = StyleSheet.create({
     status:{
         paddingTop: 10,
         paddingBottom: 15
-    },
-    thumbNail: {
-        height: 260,
-        width: '100%'
-    },
-    productText:{
-        alignItems: 'flex-start',
-        paddingLeft:15,
-        flex: 1
     },
     title:{
         fontWeight: 'bold',

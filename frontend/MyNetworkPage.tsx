@@ -52,33 +52,33 @@ export default class MyNetworkPage extends React.Component<any, any>{
              followingIds: newProps.route.params.followingIds }, () => this.fetchData());        
     }
 
-    setSwitch = (val) => {
+    setSwitch = (val: Number) => {
         this.setState({ switch: val }, () => this.reloadValues());
     }
 
-  getFollowersData = async () => {
-    this.setState({ isLoading: true });
-    let totalFollowersData = [];
-    for(let i = 0; i<this.state.followerIds.length;i++){
-      let userInfo = await this.props.contract.methods.getUserData(this.state.followerIds[i]).call({from: this.props.userAddress});
-      totalFollowersData = [...totalFollowersData, userInfo];
+    getFollowersData = async () => {
+        this.setState({ isLoading: true });
+        let totalFollowersData = [];
+        for(let i = 0; i<this.state.followerIds.length;i++){
+        let userInfo = await this.props.contract.methods.getUserData(this.state.followerIds[i]).call({from: this.props.userAddress});
+        totalFollowersData = [...totalFollowersData, userInfo];
+        }
+        console.log("Fetching followers data 11111111",totalFollowersData);
+        this.setState({ followersData : totalFollowersData, isLoading: false });
     }
-    console.log("Fetching followers data 11111111",totalFollowersData);
-    this.setState({ followersData : totalFollowersData, isLoading: false });
-  }
 
-  getFollowingData = async () => {
-    this.setState({ isLoading: true });
-    let totalFollowingData = [];
-    for(let i = 0; i<this.state.followingIds.length;i++){
-      let userInfo = await this.props.contract.methods.getUserData(this.state.followingIds[i]).call({from: this.props.userAddress});
-      totalFollowingData = [...totalFollowingData, userInfo];
+    getFollowingData = async () => {
+        this.setState({ isLoading: true });
+        let totalFollowingData = [];
+        for(let i = 0; i<this.state.followingIds.length;i++){
+        let userInfo = await this.props.contract.methods.getUserData(this.state.followingIds[i]).call({from: this.props.userAddress});
+        totalFollowingData = [...totalFollowingData, userInfo];
+        }
+        console.log("Fetching following data 11111111",totalFollowingData);
+        this.setState({ followingData : totalFollowingData, isLoading: false });
     }
-    console.log("Fetching following data 11111111",totalFollowingData);
-    this.setState({ followingData : totalFollowingData, isLoading: false });
-  }
 
-    unFollowAuthor = (authorId) => {
+    unFollowAuthor = (authorId: Number) => {
         this.props.contract.methods.unFollowAuthor(authorId).send({ from: this.props.userAddress })
             .once('receipt', (receipt) => {
             console.log("r:",receipt);
@@ -86,7 +86,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
         //notification for following
     }
 
-    followAuthor = (authorId) => {
+    followAuthor = (authorId : Number) => {
         this.props.contract.methods.followAuthor(authorId).send({ from: this.props.userAddress })
             .once('receipt', (receipt) => {
             console.log("r:",receipt);
@@ -99,7 +99,7 @@ export default class MyNetworkPage extends React.Component<any, any>{
         this.setState({ activeTab: newActiveTab });
     }
 
-    expandMenu = (itemId) => {
+    expandMenu = (itemId : Number) => {
         const oldselectedId = this.state.selectedId;
         if(oldselectedId !== itemId){
             this.setState({ selectedId: itemId });

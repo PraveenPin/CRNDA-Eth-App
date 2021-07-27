@@ -37,7 +37,7 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
         setIsLoading(false);
     }
 
-    const getUserInfo = async (id) => {
+    const getUserInfo = async (id: Number) => {
         const userInfo = await contract.methods.getUserData(id).call({from: userAddress});
         console.log("User Data:", userInfo);
         setUserFullDetails({
@@ -50,9 +50,8 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
         });
     }
 
-    const getUserPosts = async (id) => {
+    const getUserPosts = async (id: Number) => {
         const userPosts = await contract.methods.getMyPosts(id).call({from: userAddress});
-        console.log("User posts:",id, userPosts);
         setUserPosts(userPosts[1]);
     }
 
@@ -63,7 +62,6 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
     }, [isFocused]);
 
 
-    
     const postItem = ({item}) => {     
         console.log("post",item);
         
@@ -92,8 +90,6 @@ export default function ProfilePage({ web3, contract, userAddress, route, naviga
         );
     }
     
-    console.log("in usr posts",myFollowerIds, "ing->", myFollowingIds)
-
     return(
         <View style={styles.container}>
             {!!userFullDetails ? (

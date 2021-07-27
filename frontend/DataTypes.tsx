@@ -18,3 +18,13 @@ export type PostFormData = {
     postUrl?: string;
     imageHash?: string;
 };
+
+export type ExplorePageState = {
+    initialSetup: boolean,
+    allPosts: Array<any>,
+    headerText: string,
+    searchKeyWord: string,
+    showSearchResults: boolean,
+    searchResults: Array<any>,
+    tickerData: string
+};
