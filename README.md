@@ -1,4 +1,4 @@
-# TypeScript Example
+# React Native Ethereum Dapp
 
 <p>
   <!-- iOS -->
@@ -9,13 +9,7 @@
   <img alt="Supports Expo Web" longdesc="Supports Expo Web" src="https://img.shields.io/badge/web-4630EB.svg?style=flat-square&logo=GOOGLE-CHROME&labelColor=4285F4&logoColor=fff" />
 </p>
 
-```sh
-npx create-react-native-app -t with-typescript
-```
-
-TypeScript is a superset of JavaScript which gives you static types and powerful tooling in Visual Studio Code including autocompletion and useful inline warnings for type errors.
-
-## 🚀 How to use
+TypeScript is a superset of JavaScript which gives you static types and powerful tooling in VSCode including autocompletion and useful inline warnings for type errors.
 
 #### Creating a new project
 
@@ -25,12 +19,10 @@ TypeScript is a superset of JavaScript which gives you static types and powerful
 
 ### Adding TypeScript to existing projects
 
-- Create a blank TypeScript config: `touch tsconfig.json`
-- Run `expo start` to automatically configure TypeScript
-- Rename files to TypeScript, `.tsx` for React components and `.ts` for plain typescript files
+### Development and Deployment of Smart Contracts
 
-> 💡 You can disable the TypeScript setup in Expo CLI with the environment variable `EXPO_NO_TYPESCRIPT_SETUP=1 expo start`
-
-## 📝 Notes
-
-- [Expo TypeScript guide](https://docs.expo.io/versions/latest/guides/typescript/)
+- Install Ganache: `Quick start ethereum block chain, get the credentials`
+- Truffle framework for deployment: `truffle init ` in the project root folder
+- Add the Ganache credentials to truffle.config.js
+- Install Metamask wallet application on both browser and mobile phone.
+- Smart contract is written in Solidity. 
