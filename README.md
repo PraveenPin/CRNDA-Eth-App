@@ -26,3 +26,10 @@ TypeScript is a superset of JavaScript which gives you static types and powerful
 - Add the Ganache credentials to `truffle.config.js`
 - Install `Metamask wallet application` on both browser and mobile phone.
 - Smart contract is written in `Solidity`. 
+
+### Running the application
+
+- Install `expo` and all dependencies in `package.json`
+- Run `expo start` in the terminal of the root folder.
+- Install `Expo Go` mobile application so that you can open/ test your Dapp in iOS/Android phones.
+- ***While running the Dapp on mobiles using expo go, make sure Metamask Network on both mobile/web browser is connected to Ganache Server.*** 
