@@ -23,6 +23,6 @@ TypeScript is a superset of JavaScript which gives you static types and powerful
 
 - Install Ganache: `Quick start ethereum block chain, get the credentials`
 - Truffle framework for deployment: `truffle init ` in the project root folder
-- Add the Ganache credentials to truffle.config.js
-- Install Metamask wallet application on both browser and mobile phone.
-- Smart contract is written in Solidity. 
+- Add the Ganache credentials to `truffle.config.js`
+- Install `Metamask wallet application` on both browser and mobile phone.
+- Smart contract is written in `Solidity`. 
